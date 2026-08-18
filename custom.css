@@ -1,0 +1,2406 @@
+/* =========================================================
+   ICSAT 2027 — SPEAKERS
+   FINAL CLEAN CSS
+   ========================================================= */
+
+
+/* =========================================================
+   BOX SIZING / OVERFLOW
+   ========================================================= */
+
+.icsat-page,
+.icsat-page *,
+.icsat-page *::before,
+.icsat-page *::after {
+    box-sizing: border-box;
+}
+
+.icsat-page {
+    width: 100%;
+    max-width: 1380px;
+    margin: 0 auto;
+    padding: 35px 24px 80px;
+    overflow-x: hidden;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.page-header {
+    width: 100%;
+    margin: 0 0 48px;
+    text-align: center;
+}
+
+.page-header h1 {
+    margin: 0;
+    padding: 0;
+
+    font-size: clamp(34px, 3.4vw, 48px);
+    line-height: 1.1;
+    font-weight: 700;
+
+    letter-spacing: -1px;
+}
+
+.page-header p {
+    margin: 8px 0 0;
+
+    font-size: 11px;
+    line-height: 1.4;
+
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+
+    opacity: 0.5;
+}
+
+
+/* =========================================================
+   GROUP
+   ========================================================= */
+
+.speaker-group {
+    width: 100%;
+    margin: 0 0 58px;
+}
+
+.speaker-group:last-child {
+    margin-bottom: 0;
+}
+
+
+/* =========================================================
+   GROUP TITLE
+   ========================================================= */
+
+.speaker-group-heading {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+
+    margin: 0 0 22px;
+
+    gap: 10px;
+}
+
+.speaker-group-heading h2 {
+    flex: 0 0 auto;
+
+    margin: 0;
+    padding: 0;
+
+    font-size: 19px;
+    line-height: 1.2;
+    font-weight: 650;
+
+    letter-spacing: 0;
+}
+
+.section-star {
+    flex: 0 0 auto;
+
+    font-size: 16px;
+    line-height: 1;
+}
+
+.heading-line {
+    flex: 1 1 auto;
+
+    min-width: 20px;
+
+    height: 1px;
+
+    margin-left: 8px;
+
+    background: currentColor;
+
+    opacity: 0.10;
+}
+
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
+.speaker-grid {
+    display: grid;
+
+    width: 100%;
+    min-width: 0;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 18px;
+}
+
+
+/* =========================================================
+   CARD
+   ========================================================= */
+
+.speaker-card {
+    position: relative;
+
+    width: 100%;
+    min-width: 0;
+
+    overflow: hidden;
+
+    border-radius: 14px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 5px 20px rgba(0, 0, 0, 0.055);
+
+    transition:
+        transform 0.28s ease,
+        box-shadow 0.28s ease;
+}
+
+.speaker-card:hover {
+    transform: translateY(-4px);
+
+    box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.10);
+}
+
+
+/* =========================================================
+   PHOTO
+   ========================================================= */
+
+.speaker-photo-wrap {
+    position: relative;
+
+    width: 100%;
+
+    aspect-ratio: 1 / 0.92;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            145deg,
+            #f0f1f5,
+            #e7e9ee
+        );
+}
+
+.speaker-photo {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+    object-position: center top;
+
+    transition:
+        transform 0.4s ease;
+}
+
+.speaker-card:hover .speaker-photo {
+    transform: scale(1.025);
+}
+
+
+/* =========================================================
+   CARD CONTENT
+   ========================================================= */
+
+.speaker-card-content {
+    width: 100%;
+
+    padding:
+        16px 17px 18px;
+}
+
+
+/* =========================================================
+   TYPE LABEL
+   ========================================================= */
+
+.speaker-type-label {
+    margin: 0 0 6px;
+
+    font-size: 8.5px;
+    line-height: 1.3;
+
+    font-weight: 700;
+
+    letter-spacing: 1.45px;
+    text-transform: uppercase;
+
+    opacity: 0.48;
+}
+
+
+/* =========================================================
+   NAME
+   ========================================================= */
+
+.speaker-name {
+    margin: 0;
+
+    font-size: 17px;
+    line-height: 1.25;
+
+    font-weight: 650;
+
+    letter-spacing: -0.2px;
+}
+
+
+/* =========================================================
+   TALK TITLE
+   ========================================================= */
+
+.speaker-talk {
+    margin-top: 9px;
+
+    font-size: 11.5px;
+    line-height: 1.48;
+
+    font-weight: 450;
+}
+
+
+/* =========================================================
+   GOOGLE SCHOLAR
+   ========================================================= */
+
+.speaker-scholar {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    margin-top: 13px;
+    padding: 6px 9px;
+
+    border-radius: 20px;
+
+    background: #f1f3f7;
+
+    color: inherit;
+
+    text-decoration: none;
+
+    font-size: 10px;
+    line-height: 1;
+
+    font-weight: 600;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.speaker-scholar:hover {
+    transform: translateY(-1px);
+
+    background: #e7eaf0;
+}
+
+.scholar-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 17px;
+    height: 17px;
+
+    border-radius: 50%;
+
+    background: #ffffff;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   KEYNOTE
+   ========================================================= */
+
+.keynote-section .speaker-card {
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.075);
+}
+
+.keynote-section .speaker-card::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 3px;
+
+    opacity: 0.75;
+}
+
+.keynote-section .speaker-type-label {
+    font-size: 8.5px;
+
+    font-weight: 750;
+
+    letter-spacing: 1.6px;
+
+    opacity: 0.7;
+}
+
+.keynote-section .speaker-card:hover {
+    box-shadow:
+        0 12px 34px rgba(0, 0, 0, 0.12);
+}
+
+
+/* =========================================================
+   INVITED / CHAIR
+   ========================================================= */
+
+.invited-section .speaker-card,
+.chair-section .speaker-card {
+    box-shadow:
+        0 5px 20px rgba(0, 0, 0, 0.055);
+}
+
+
+/* =========================================================
+   LOADING / EMPTY / ERROR
+   ========================================================= */
+
+.loading,
+.speakers-empty,
+.speakers-error {
+    width: 100%;
+
+    padding: 60px 20px;
+
+    text-align: center;
+}
+
+.loading,
+.speakers-empty {
+    opacity: 0.55;
+}
+
+.speakers-error {
+    border-radius: 14px;
+
+    background: #fff1f1;
+
+    color: #9b1c1c;
+}
+
+
+/* =========================================================
+   TABLET — 3 COLUMNS
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+    .icsat-page {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .speaker-grid {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
+        gap: 17px;
+    }
+}
+
+
+/* =========================================================
+   SMALL TABLET — 2 COLUMNS
+   ========================================================= */
+
+@media (max-width: 850px) {
+
+    .speaker-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 18px;
+    }
+}
+
+
+/* =========================================================
+   MOBILE — 1 COLUMN
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .icsat-page {
+        padding:
+            28px 14px 60px;
+    }
+
+    .page-header {
+        margin-bottom: 40px;
+    }
+
+    .page-header h1 {
+        font-size: 36px;
+    }
+
+    .speaker-group {
+        margin-bottom: 50px;
+    }
+
+    .speaker-group-heading {
+        margin-bottom: 20px;
+    }
+
+    .speaker-group-heading h2 {
+        font-size: 18px;
+    }
+
+    .speaker-grid {
+        grid-template-columns: 1fr;
+
+        gap: 17px;
+    }
+
+    .speaker-photo-wrap {
+        aspect-ratio: 1 / 0.88;
+    }
+
+    .speaker-name {
+        font-size: 19px;
+    }
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+    .icsat-page {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .speaker-grid {
+        gap: 15px;
+    }
+}
+
+/* =========================================================
+   ICSAT 2027 — VISUAL DESIGN LAYER
+   ========================================================= */
+
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+
+.page-header h1 {
+    position: relative;
+
+    display: inline-block;
+
+    letter-spacing: -1.2px;
+}
+
+.page-header h1::after {
+    content: "";
+
+    display: block;
+
+    width: 42px;
+    height: 3px;
+
+    margin: 13px auto 0;
+
+    border-radius: 10px;
+
+    background: #30206f;
+}
+
+.page-header p {
+    color: #30206f;
+}
+
+
+/* =========================================================
+   SECTION HEADINGS
+   ========================================================= */
+
+.speaker-group-heading h2 {
+    color: #30206f;
+
+    font-weight: 650;
+}
+
+.section-star {
+    color: #30206f;
+}
+
+.heading-line {
+    background:
+        linear-gradient(
+            90deg,
+            #30206f 0%,
+            rgba(48, 32, 111, 0.08) 100%
+        );
+
+    opacity: 1;
+}
+
+
+/* =========================================================
+   GENERAL CARD REFINEMENT
+   ========================================================= */
+
+.speaker-card {
+    border: 1px solid rgba(48, 32, 111, 0.055);
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #fcfcfe 100%
+        );
+}
+
+.speaker-card:hover {
+    border-color:
+        rgba(48, 32, 111, 0.12);
+}
+
+
+/* =========================================================
+   PHOTO
+   ========================================================= */
+
+.speaker-photo-wrap {
+    position: relative;
+}
+
+.speaker-photo-wrap::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    background:
+        linear-gradient(
+            180deg,
+            transparent 65%,
+            rgba(20, 15, 45, 0.055) 100%
+        );
+}
+
+
+/* =========================================================
+   NAME
+   ========================================================= */
+
+.speaker-name {
+    color: #20202a;
+
+    transition:
+        color 0.25s ease;
+}
+
+.speaker-card:hover .speaker-name {
+    color: #30206f;
+}
+
+
+/* =========================================================
+   TALK TITLE
+   ========================================================= */
+
+.speaker-talk {
+    color: #4d4d58;
+}
+
+
+/* =========================================================
+   TYPE LABEL
+   ========================================================= */
+
+.speaker-type-label {
+    color: #30206f;
+}
+
+
+/* =========================================================
+   GOOGLE SCHOLAR
+   ========================================================= */
+
+.speaker-scholar {
+    border:
+        1px solid rgba(48, 32, 111, 0.08);
+
+    background:
+        rgba(48, 32, 111, 0.045);
+
+    color: #30206f;
+}
+
+.speaker-scholar:hover {
+    border-color:
+        rgba(48, 32, 111, 0.16);
+
+    background:
+        rgba(48, 32, 111, 0.085);
+}
+
+.scholar-icon {
+    color: #30206f;
+}
+
+
+/* =========================================================
+   KEYNOTE — PREMIUM MATTE GLOW
+   ========================================================= */
+
+.keynote-section .speaker-card {
+
+    border-color:
+        rgba(48, 32, 111, 0.13);
+
+    box-shadow:
+        0 8px 25px rgba(48, 32, 111, 0.08),
+        0 0 0 1px rgba(48, 32, 111, 0.025);
+
+}
+
+
+/* subtle top accent */
+
+.keynote-section .speaker-card::before {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 3px;
+
+    z-index: 5;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(48, 32, 111, 0.25),
+            rgba(48, 32, 111, 0.65),
+            rgba(48, 32, 111, 0.25)
+        );
+
+}
+
+
+/* very subtle glow */
+
+.keynote-section .speaker-card::after {
+
+    content: "";
+
+    position: absolute;
+
+    inset: -30px;
+
+    z-index: -1;
+
+    pointer-events: none;
+
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(48, 32, 111, 0.085),
+            transparent 65%
+        );
+
+    opacity: 0.75;
+
+}
+
+
+.keynote-section .speaker-card:hover {
+
+    border-color:
+        rgba(48, 32, 111, 0.20);
+
+    box-shadow:
+        0 12px 34px rgba(48, 32, 111, 0.12),
+        0 0 22px rgba(48, 32, 111, 0.045);
+
+}
+
+
+/* =========================================================
+   KEYNOTE LABEL
+   ========================================================= */
+
+.keynote-section .speaker-type-label {
+
+    color: #30206f;
+
+    font-weight: 750;
+
+    letter-spacing: 1.65px;
+}
+
+
+/* =========================================================
+   INVITED
+   ========================================================= */
+
+.invited-section .speaker-type-label {
+    color: #4d4d58;
+}
+
+
+/* =========================================================
+   CHAIR
+   ========================================================= */
+
+.chair-section .speaker-type-label {
+    color: #555563;
+}
+
+
+/* =========================================================
+   SPEAKERS
+   ========================================================= */
+
+.speaker-section .speaker-type-label {
+    color: #666673;
+}
+
+
+/* =========================================================
+   SECTION SPACING
+   ========================================================= */
+
+.keynote-section {
+    margin-bottom: 68px;
+}
+
+.invited-section {
+    margin-bottom: 62px;
+}
+
+.chair-section {
+    margin-bottom: 62px;
+}
+
+.speaker-section {
+    margin-bottom: 0;
+}
+
+/* =========================================================
+   CHAIR & SPEAKER — NO PHOTO
+   ========================================================= */
+
+.chair-section .speaker-photo-wrap,
+.speaker-section .speaker-photo-wrap {
+    display: none;
+}
+
+/* =========================================================
+   COMPACT CHAIRS & SPEAKERS
+   ========================================================= */
+
+.chair-section .speaker-grid,
+.speaker-section .speaker-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 14px;
+}
+
+
+/* Fotoğraf olmadığı için kartları daha kompakt yap */
+
+.chair-section .speaker-card-content,
+.speaker-section .speaker-card-content {
+    padding: 15px 14px 16px;
+}
+
+.chair-section .speaker-name,
+.speaker-section .speaker-name {
+    font-size: 15px;
+    line-height: 1.3;
+}
+
+.chair-section .speaker-talk,
+.speaker-section .speaker-talk {
+    font-size: 10.5px;
+    line-height: 1.45;
+}
+
+.chair-section .speaker-type-label,
+.speaker-section .speaker-type-label {
+    font-size: 8px;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+    .chair-section .speaker-grid,
+    .speaker-section .speaker-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .chair-section .speaker-grid,
+    .speaker-section .speaker-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+/* ============================================================
+   ICSAT 2027 — COMMITTEE
+   SPECIAL SECTIONS
+   ============================================================ */
+
+#committee-container {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+/* ============================================================
+   SECTION
+   ============================================================ */
+
+#committee-container .committee-group {
+    width: 100%;
+    margin: 0 auto 23px;
+    box-sizing: border-box;
+}
+
+
+/* ============================================================
+   SECTION HEADING
+   ============================================================ */
+
+#committee-container .committee-group-heading {
+    width: 100%;
+    margin: 0 0 34px;
+    text-align: center;
+}
+
+#committee-container .committee-group-heading h2 {
+    margin: 0;
+    padding: 0;
+
+    font-family: "Avenir", "Avenir Next", Arial, sans-serif;
+
+    font-size: 28px;
+    font-weight: 600;
+
+    line-height: 1.25;
+    letter-spacing: 0.08em;
+
+    text-transform: uppercase;
+
+    color: #ffffff;
+}
+
+#committee-container .committee-heading-line {
+    width: 70px;
+    height: 2px;
+
+    margin: 14px auto 0;
+
+    border-radius: 2px;
+
+    background: rgba(255, 255, 255, 0.55);
+}
+
+
+/* ============================================================
+   GRID
+   ============================================================ */
+
+#committee-container .committee-grid {
+    display: grid;
+
+    width: 100%;
+
+    gap: 24px;
+
+    box-sizing: border-box;
+}
+
+
+/* ============================================================
+   HONORARY CHAIRS / CHAIRS / CO-CHAIRS
+   ============================================================ */
+
+#committee-container .honorary-chairs-section .committee-grid,
+#committee-container .chairs-section .committee-grid,
+#committee-container .co-chairs-section .committee-grid {
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    max-width: 1000px;
+
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+/* ============================================================
+   SECRETARIAT
+   ============================================================ */
+
+#committee-container .secretariat-section .committee-grid {
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    max-width: 1200px;
+
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+/* ============================================================
+   CARD
+   ============================================================ */
+
+#committee-container .committee-card {
+
+    position: relative;
+
+    min-height: 190px;
+
+    padding: 30px 32px;
+
+    box-sizing: border-box;
+
+    overflow: hidden;
+
+    border-radius: 18px;
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.075),
+            rgba(255, 255, 255, 0.025)
+        );
+
+    box-shadow:
+        0 12px 35px rgba(0, 0, 0, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease,
+        border-color 0.3s ease;
+}
+
+
+/* ============================================================
+   TOP ACCENT
+   ============================================================ */
+
+#committee-container .committee-card::before {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 28px;
+    right: 28px;
+
+    height: 2px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.45),
+            transparent
+        );
+
+    opacity: 0.55;
+}
+
+
+/* ============================================================
+   HOVER
+   ============================================================ */
+
+#committee-container .committee-card:hover {
+
+    transform: translateY(-4px);
+
+    border-color:
+        rgba(255, 255, 255, 0.22);
+
+    box-shadow:
+        0 18px 42px rgba(0, 0, 0, 0.22),
+        0 0 24px rgba(120, 100, 190, 0.08);
+}
+
+
+/* ============================================================
+   CARD CONTENT
+   ============================================================ */
+
+#committee-container .committee-card-content {
+
+    position: relative;
+    z-index: 1;
+
+    display: flex;
+
+    flex-direction: column;
+
+    height: 100%;
+}
+
+
+/* ============================================================
+   NAME
+   ============================================================ */
+
+#committee-container .committee-name {
+
+    margin: 0 0 10px;
+    padding: 0;
+
+    font-family:
+        "Avenir",
+        "Avenir Next",
+        Arial,
+        sans-serif;
+
+    font-size: 22px;
+    font-weight: 600;
+
+    line-height: 1.3;
+
+    letter-spacing: 0.01em;
+
+    color: #ffffff;
+}
+
+
+/* ============================================================
+   TITLE
+   ============================================================ */
+
+#committee-container .committee-title {
+
+    margin: 0 0 13px;
+
+    font-family:
+        "Avenir",
+        "Avenir Next",
+        Arial,
+        sans-serif;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    line-height: 1.4;
+
+    letter-spacing: 0.04em;
+
+    text-transform: uppercase;
+
+    color: rgba(255, 255, 255, 0.72);
+}
+
+
+/* ============================================================
+   AFFILIATION
+   ============================================================ */
+
+#committee-container .committee-affiliation {
+
+    margin-top: auto;
+
+    font-family:
+        "Avenir",
+        "Avenir Next",
+        Arial,
+        sans-serif;
+
+    font-size: 15px;
+    font-weight: 400;
+
+    line-height: 1.55;
+
+    color: rgba(255, 255, 255, 0.88);
+}
+
+
+/* ============================================================
+   COUNTRY
+   ============================================================ */
+
+#committee-container .committee-country {
+
+    margin-top: 8px;
+
+    font-family:
+        "Avenir",
+        "Avenir Next",
+        Arial,
+        sans-serif;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    line-height: 1.4;
+
+    letter-spacing: 0.12em;
+
+    text-transform: uppercase;
+
+    color: rgba(255, 255, 255, 0.58);
+}
+
+
+/* ============================================================
+   HONORARY CHAIRS — SPECIAL
+   ============================================================ */
+
+#committee-container .honorary-chairs-section .committee-card {
+
+    min-height: 205px;
+
+    padding: 34px 38px;
+
+    border-color:
+        rgba(255, 255, 255, 0.16);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.095),
+            rgba(255, 255, 255, 0.035)
+        );
+}
+
+#committee-container .honorary-chairs-section .committee-name {
+    font-size: 25px;
+}
+
+#committee-container .honorary-chairs-section .committee-affiliation {
+    font-size: 16px;
+}
+
+
+/* ============================================================
+   CHAIRS / CO-CHAIRS
+   ============================================================ */
+
+#committee-container .chairs-section .committee-card,
+#committee-container .co-chairs-section .committee-card {
+
+    min-height: 185px;
+}
+
+
+/* ============================================================
+   SECRETARIAT
+   ============================================================ */
+
+#committee-container .secretariat-section .committee-card {
+
+    min-height: 175px;
+
+    padding: 26px 28px;
+}
+
+#committee-container .secretariat-section .committee-name {
+    font-size: 20px;
+}
+
+#committee-container .secretariat-section .committee-affiliation {
+    font-size: 14px;
+}
+
+
+/* ============================================================
+   TABLET
+   ============================================================ */
+
+@media (max-width: 900px) {
+
+    #committee-container .committee-group {
+        margin-bottom: 55px;
+    }
+
+    #committee-container .committee-group-heading h2 {
+        font-size: 24px;
+    }
+
+    #committee-container .secretariat-section .committee-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 600px) {
+
+    #committee-container .committee-group {
+        margin-bottom: 45px;
+    }
+
+    #committee-container .committee-group-heading {
+        margin-bottom: 24px;
+    }
+
+    #committee-container .committee-group-heading h2 {
+        font-size: 20px;
+        letter-spacing: 0.06em;
+    }
+
+    #committee-container .committee-heading-line {
+        width: 55px;
+        margin-top: 11px;
+    }
+
+    #committee-container .honorary-chairs-section .committee-grid,
+    #committee-container .chairs-section .committee-grid,
+    #committee-container .co-chairs-section .committee-grid,
+    #committee-container .secretariat-section .committee-grid {
+
+        grid-template-columns: 1fr;
+        max-width: 100%;
+    }
+
+    #committee-container .committee-card,
+    #committee-container .honorary-chairs-section .committee-card,
+    #committee-container .secretariat-section .committee-card {
+
+        min-height: auto;
+
+        padding: 25px 24px;
+    }
+
+    #committee-container .honorary-chairs-section .committee-name {
+        font-size: 22px;
+    }
+
+    #committee-container .committee-name {
+        font-size: 20px;
+    }
+
+    #committee-container .committee-affiliation {
+        margin-top: 8px;
+    }
+}
+
+
+/* ============================================================
+   ICSAT 2027 — COMMITTEE
+   FINAL VISUAL REFINEMENT
+   ============================================================ */
+
+
+/* ============================================================
+   SECTION HEADINGS
+   ============================================================ */
+
+#committee-container .committee-group-heading h2 {
+    color: #30206f !important;
+
+    font-size: 20px;
+    font-weight: 650;
+
+    letter-spacing: 0.02em;
+
+    text-transform: none;
+}
+
+#committee-container .committee-heading-line {
+    background:
+        linear-gradient(
+            90deg,
+            #30206f 0%,
+            rgba(48, 32, 111, 0.08) 100%
+        );
+
+    opacity: 1;
+}
+
+
+/* ============================================================
+   GENERAL COMMITTEE CARD
+   ============================================================ */
+
+#committee-container .committee-card {
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #fcfcfe 100%
+        ) !important;
+
+    border:
+        1px solid rgba(48, 32, 111, 0.07);
+
+    box-shadow:
+        0 5px 20px rgba(0, 0, 0, 0.055);
+
+    transition:
+        transform 0.28s ease,
+        box-shadow 0.28s ease,
+        border-color 0.28s ease;
+}
+
+
+/* ============================================================
+   CARD TOP ACCENT
+   ============================================================ */
+
+#committee-container .committee-card::before {
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(48, 32, 111, 0.35),
+            transparent
+        );
+
+    opacity: 0.65;
+}
+
+
+/* ============================================================
+   CARD HOVER
+   ============================================================ */
+
+#committee-container .committee-card:hover {
+
+    transform: translateY(-3px);
+
+    border-color:
+        rgba(48, 32, 111, 0.14);
+
+    box-shadow:
+        0 12px 30px rgba(48, 32, 111, 0.09);
+}
+
+
+/* ============================================================
+   NAME
+   ============================================================ */
+
+#committee-container .committee-name {
+
+    color: #20202a !important;
+
+    font-size: 21px;
+    font-weight: 650;
+
+    line-height: 1.3;
+
+    letter-spacing: -0.15px;
+}
+
+#committee-container .committee-card:hover .committee-name {
+    color: #30206f !important;
+}
+
+
+/* ============================================================
+   ACADEMIC TITLE
+   ============================================================ */
+
+#committee-container .committee-title {
+
+    color: #30206f !important;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    letter-spacing: 1.2px;
+
+    text-transform: uppercase;
+
+    opacity: 0.72;
+}
+
+
+/* ============================================================
+   AFFILIATION
+   ============================================================ */
+
+#committee-container .committee-affiliation {
+
+    color: #4d4d58 !important;
+
+    font-size: 14px;
+    font-weight: 450;
+
+    line-height: 1.5;
+}
+
+
+/* ============================================================
+   COUNTRY
+   ============================================================ */
+
+#committee-container .committee-country {
+
+    color: #666673 !important;
+
+    font-size: 10px;
+    font-weight: 650;
+
+    letter-spacing: 1.3px;
+
+    text-transform: uppercase;
+}
+
+
+/* ============================================================
+   HONORARY CHAIRS
+   ============================================================ */
+
+#committee-container .honorary-chairs-section .committee-card {
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #faf9fd 100%
+        ) !important;
+
+    border-color:
+        rgba(48, 32, 111, 0.12);
+
+    box-shadow:
+        0 7px 25px rgba(48, 32, 111, 0.075);
+}
+
+#committee-container .honorary-chairs-section .committee-name {
+
+    font-size: 24px;
+
+    color: #20202a !important;
+}
+
+#committee-container .honorary-chairs-section .committee-affiliation {
+
+    font-size: 15px;
+}
+
+
+/* ============================================================
+   CHAIRS
+   ============================================================ */
+
+#committee-container .chairs-section .committee-name {
+
+    font-size: 21px;
+}
+
+
+/* ============================================================
+   CO-CHAIRS
+   ============================================================ */
+
+#committee-container .co-chairs-section .committee-name {
+
+    font-size: 21px;
+}
+
+
+/* ============================================================
+   SECRETARIAT
+   ============================================================ */
+
+#committee-container .secretariat-section .committee-card {
+
+    box-shadow:
+        0 4px 18px rgba(0, 0, 0, 0.05);
+}
+
+#committee-container .secretariat-section .committee-name {
+
+    font-size: 19px;
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 600px) {
+
+    #committee-container .committee-group-heading h2 {
+        font-size: 18px;
+    }
+
+    #committee-container .committee-name {
+        font-size: 20px;
+    }
+
+    #committee-container .honorary-chairs-section .committee-name {
+        font-size: 22px;
+    }
+
+}
+
+
+/* ============================================================
+   COMMITTEE — TIGHT TEXT HIERARCHY
+   ============================================================ */
+
+#committee-container .committee-card-content {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+}
+
+
+/* Name → Affiliation spacing */
+
+#committee-container .committee-name {
+    margin-bottom: 5px !important;
+}
+
+
+/* If Title is still displayed separately */
+
+#committee-container .committee-title {
+    margin-bottom: 6px !important;
+}
+
+
+/* Affiliation should NOT be pushed to the bottom */
+
+#committee-container .committee-affiliation {
+    margin-top: 0 !important;
+}
+
+
+/* Country follows affiliation closely */
+
+#committee-container .committee-country {
+    margin-top: 5px !important;
+}
+
+/* ============================================================
+   COMMITTEE — COMPACT CARDS KArtları daraltma
+   ============================================================ */
+
+#committee-container .committee-card {
+    min-height: 145px !important;
+    padding: 22px 28px !important;
+}
+
+
+/* Honorary Chairs biraz daha geniş nefes alsın */
+
+#committee-container .honorary-chairs-section .committee-card {
+    min-height: 155px !important;
+    padding: 25px 32px !important;
+}
+
+
+/* Chairs / Co-Chairs */
+
+#committee-container .chairs-section .committee-card,
+#committee-container .co-chairs-section .committee-card {
+    min-height: 140px !important;
+    padding: 22px 28px !important;
+}
+
+
+/* Secretariat — üçlü kartlar daha kompakt */
+
+#committee-container .secretariat-section .committee-card {
+    min-height: 135px !important;
+    padding: 20px 24px !important;
+}
+
+/* ============================================================
+   COMMITTEE — CONTENT FIT CARDS
+   ============================================================ */
+
+#committee-container .committee-card {
+    min-height: 0 !important;
+    height: auto !important;
+
+    padding: 22px 28px !important;
+}
+
+
+/* Honorary Chairs */
+
+#committee-container .honorary-chairs-section .committee-card {
+    min-height: 0 !important;
+    height: auto !important;
+
+    padding: 24px 30px !important;
+}
+
+
+/* Chairs */
+
+#committee-container .chairs-section .committee-card {
+    min-height: 0 !important;
+    height: auto !important;
+
+    padding: 21px 28px !important;
+}
+
+
+/* Co-Chairs */
+
+#committee-container .co-chairs-section .committee-card {
+    min-height: 0 !important;
+    height: auto !important;
+
+    padding: 21px 28px !important;
+}
+
+
+/* Secretariat */
+
+#committee-container .secretariat-section .committee-card {
+    min-height: 0 !important;
+    height: auto !important;
+
+    padding: 20px 24px !important;
+}
+
+/* ============================================================
+   COMMITTEE — REDUCE SECTION SPACING
+   ============================================================ */
+
+
+/* Bölümler arasındaki boşluk */
+
+#committee-container .committee-group {
+    margin-bottom: 38px !important;
+}
+
+
+/* Başlık ile kartlar arasındaki boşluk */
+
+#committee-container .committee-group-heading {
+    margin-bottom: 24px !important;
+}
+
+
+/* Son bölümden sonra ekstra boşluk bırakma */
+
+#committee-container .committee-group:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* ============================================================
+   ICSAT 2027 — ORGANIZING COMMITTEE
+   ============================================================ */
+
+#committee-container .organizing-committee-section .committee-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 18px;
+
+    max-width: 1200px;
+
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+#committee-container .organizing-committee-section .committee-card {
+
+    min-height: 0 !important;
+
+    height: auto !important;
+
+    padding: 20px 22px !important;
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.045);
+}
+
+
+#committee-container .organizing-committee-section .committee-name {
+
+    font-size: 17px;
+
+    line-height: 1.35;
+
+    margin-bottom: 6px !important;
+}
+
+
+#committee-container .organizing-committee-section .committee-affiliation {
+
+    font-size: 13px;
+
+    line-height: 1.45;
+
+    margin-top: 0 !important;
+}
+
+
+#committee-container .organizing-committee-section .committee-country {
+
+    font-size: 9px;
+
+    margin-top: 5px !important;
+
+    letter-spacing: 1.1px;
+}
+
+
+/* ============================================================
+   SCIENTIFIC COMMITTEE
+   ============================================================ */
+
+#committee-container .scientific-committee-section .committee-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 15px;
+
+    max-width: 1400px;
+
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+#committee-container .scientific-committee-section .committee-card {
+
+    min-height: 0 !important;
+
+    height: auto !important;
+
+    padding: 17px 19px !important;
+
+    border-radius: 13px;
+
+    box-shadow:
+        0 3px 13px rgba(0, 0, 0, 0.04);
+}
+
+
+#committee-container .scientific-committee-section .committee-name {
+
+    font-size: 15px;
+
+    line-height: 1.35;
+
+    margin-bottom: 5px !important;
+}
+
+
+#committee-container .scientific-committee-section .committee-affiliation {
+
+    font-size: 12px;
+
+    line-height: 1.4;
+
+    margin-top: 0 !important;
+}
+
+
+#committee-container .scientific-committee-section .committee-country {
+
+    font-size: 8px;
+
+    margin-top: 4px !important;
+
+    letter-spacing: 1px;
+}
+
+
+/* ============================================================
+   ORGANIZING / SCIENTIFIC — SECTION SPACING
+   ============================================================ */
+
+#committee-container .organizing-committee-section,
+#committee-container .scientific-committee-section {
+
+    margin-bottom: 38px !important;
+}
+
+
+/* ============================================================
+   TABLET
+   ============================================================ */
+
+@media (max-width: 1000px) {
+
+    #committee-container .organizing-committee-section .committee-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    #committee-container .scientific-committee-section .committee-grid {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 600px) {
+
+    #committee-container .organizing-committee-section .committee-grid,
+    #committee-container .scientific-committee-section .committee-grid {
+
+        grid-template-columns: 1fr;
+
+        gap: 14px;
+    }
+
+    #committee-container .organizing-committee-section .committee-card,
+    #committee-container .scientific-committee-section .committee-card {
+
+        padding: 19px 20px !important;
+    }
+
+    #committee-container .scientific-committee-section .committee-name {
+        font-size: 17px;
+    }
+
+}
+
+
+/* ============================================================
+   ORGANIZING COMMITTEE
+   ============================================================ */
+
+#committee-container .organizing-committee-section .committee-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+#committee-container .organizing-committee-section .committee-card {
+    min-height: 0 !important;
+    height: auto !important;
+
+    padding: 19px 22px !important;
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.045);
+}
+
+#committee-container .organizing-committee-section .committee-name {
+    font-size: 17px;
+    line-height: 1.35;
+
+    margin: 0 0 6px !important;
+}
+
+#committee-container .organizing-committee-section .committee-affiliation {
+    font-size: 13px;
+    line-height: 1.45;
+
+    margin: 0 !important;
+}
+
+#committee-container .organizing-committee-section .committee-country {
+    font-size: 9px;
+    line-height: 1.3;
+
+    margin-top: 5px !important;
+
+    letter-spacing: 1.1px;
+}
+
+/* ============================================================
+   SCIENTIFIC COMMITTEE
+   ============================================================ */
+
+#committee-container .scientific-committee-section .committee-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 14px;
+
+    max-width: 1400px;
+
+    margin: 0 auto;
+}
+
+
+#committee-container .scientific-committee-section .committee-card {
+    min-height: 0 !important;
+    height: auto !important;
+
+    padding: 16px 18px !important;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 3px 12px rgba(0, 0, 0, 0.035);
+}
+
+
+#committee-container .scientific-committee-section .committee-name {
+    font-size: 15px;
+    line-height: 1.35;
+
+    margin: 0 0 5px !important;
+}
+
+
+#committee-container .scientific-committee-section .committee-affiliation {
+    font-size: 12px;
+    line-height: 1.4;
+
+    margin: 0 !important;
+}
+
+
+#committee-container .scientific-committee-section .committee-country {
+    font-size: 8px;
+    line-height: 1.3;
+
+    margin-top: 4px !important;
+
+    letter-spacing: 1px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1100px) {
+
+    #committee-container .scientific-committee-section .committee-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+
+@media (max-width: 900px) {
+
+    #committee-container .organizing-committee-section .committee-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #committee-container .scientific-committee-section .committee-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    #committee-container .organizing-committee-section .committee-grid,
+    #committee-container .scientific-committee-section .committee-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    #committee-container .organizing-committee-section .committee-card,
+    #committee-container .scientific-committee-section .committee-card {
+        padding: 18px 20px !important;
+    }
+
+    #committee-container .scientific-committee-section .committee-name {
+        font-size: 16px;
+    }
+}
+
+
+
+/* ============================================================
+   ICSAT 2027 — SCIENTIFIC PROGRAM
+   Eklenme tarihi: Program.txt içeriğinden aktarıldı ve
+   #icsat-pro altına scope'landı (Elementor çakışmalarını önlemek
+   için, speaker/committee bölümleriyle aynı prensip).
+   ============================================================ */
+
+/* ================= BASE ================= */
+#icsat-pro {
+    font-family: Inter, sans-serif;
+    background: #f4f6fb;
+    padding: 30px;
+}
+
+#icsat-pro .session-icon {
+    margin-right: 6px;
+}
+
+/* ================= SPECIAL SESSIONS ================= */
+#icsat-pro .ip-session.lunch {
+    border-left: 6px solid #e0a84a;
+    background: linear-gradient(90deg, rgba(224, 168, 74, 0.12), transparent);
+}
+
+#icsat-pro .ip-session.coffee {
+    border-left: 6px solid #9b7bbd;
+    background: linear-gradient(90deg, rgba(155, 123, 189, 0.12), transparent);
+}
+
+/* ================= HEADER ================= */
+#icsat-pro .ip-header {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+#icsat-pro .ip-title {
+    font-size: 34px;
+    font-weight: 900;
+}
+
+#icsat-pro .ip-title--sub {
+    font-size: 20px;
+    font-weight: 800;
+    opacity: 0.85;
+}
+
+/* ================= GRID ================= */
+#icsat-pro .ip-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 18px;
+}
+
+#icsat-pro .ip-grid.online {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+    #icsat-pro .ip-grid,
+    #icsat-pro .ip-grid.online {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 700px) {
+    #icsat-pro .ip-grid,
+    #icsat-pro .ip-grid.online {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ================= CARD ================= */
+#icsat-pro .ip-card {
+    background: white;
+    border-radius: 19px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
+    overflow: hidden;
+}
+
+/* ROOM */
+#icsat-pro .ip-room {
+    background: linear-gradient(135deg, #5f7cff, #7b92ff);
+    color: white;
+    padding: 16px;
+    font-weight: 800;
+    font-size: 20px;
+}
+
+/* ================= SESSION ================= */
+#icsat-pro .ip-session {
+    padding: 15px;
+    border-bottom: 2px solid #eee;
+    position: relative;
+}
+
+/* TIME */
+#icsat-pro .ip-time {
+    font-weight: 800;
+    font-size: 14px;
+    color: #C23B23;
+}
+
+/* TITLE */
+#icsat-pro .ip-title2 {
+    font-size: 14px;
+    margin-top: 5px;
+    margin-right: 75px;
+    font-weight: 700;
+
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+/* SPEAKER */
+#icsat-pro .ip-speaker {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* ================= STATUS BADGE ================= */
+#icsat-pro .ip-badge {
+    position: absolute;
+    right: 10px;
+    top: 3px;
+
+    font-size: 10px;
+    padding: 6px 10px;
+    border-radius: 12px;
+
+    color: white;
+    font-weight: 800;
+    text-align: center;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#icsat-pro .badge-main {
+    font-size: 10px;
+}
+
+#icsat-pro .badge-sub {
+    font-size: 9px;
+    opacity: 0.9;
+    margin-top: 2px;
+}
+
+/* ================= CHAIR BADGE ================= */
+#icsat-pro .chair-badge {
+    display: inline-block;
+    padding: 3px 11px;
+    font-size: 10px;
+    font-weight: 900;
+
+    background: linear-gradient(135deg, #0984e3, #74b9ff);
+    color: white;
+
+    border-radius: 20px;
+    letter-spacing: 0.9px;
+
+    box-shadow: 0 3px 3px rgba(9, 132, 227, 0.4);
+
+    text-transform: uppercase;
+}
+
+#icsat-pro .chair-badge::before {
+    content: "🎤 ";
+}
+
+/* COLORS */
+#icsat-pro .live { background: #2ecc71; }
+#icsat-pro .finished { background: #e74c3c; }
+#icsat-pro .upcoming { background: #3498db; }
+
+/* ================= ZOOM ================= */
+#icsat-pro .zoom-header {
+    margin-top: 6px;
+    font-size: 15px;
+}
+
+#icsat-pro .zoom-header a {
+    display: inline-block;
+    margin-top: 3px;
+    padding: 9px 25px;
+    border-radius: 14px;
+
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    text-decoration: none;
+    font-weight: 900;
+
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    transition: 0.2s;
+}
+
+#icsat-pro .zoom-header a:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* ================= POSTER ================= */
+#icsat-pro .ip-session.poster-session {
+    border-left: 6px solid #8e44ad;
+    background: linear-gradient(135deg, rgba(142, 68, 173, 0.10), rgba(142, 68, 173, 0.03));
+}
+
+#icsat-pro .ip-session.poster-session:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(142, 68, 173, 0.25);
+}
+
+/* ================= BADGES ================= */
+#icsat-pro .oral-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 800;
+    background: #2980b9;
+    color: white;
+    border-radius: 10px;
+}
+
+#icsat-pro .poster-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 10px;
+    background: #6c5ce7;
+    color: white;
+    border-radius: 6px;
+}
+
+#icsat-pro .invited-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    font-size: 13px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #f39c12, #f1c40f);
+    color: #2c3e50;
+    border-radius: 20px;
+}
+
+#icsat-pro .keynote-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 800;
+
+    background: linear-gradient(135deg, #ff256b, #ff98b3);
+    color: white;
+
+    border-radius: 25px;
+    letter-spacing: 0.9px;
+
+    box-shadow: 0 3px 3px rgba(255, 107, 107, 0.5);
+}
+
+/* ================= KEYNOTE SPEAKER EMPHASIS ================= */
+#icsat-pro .keynote-session .ip-speaker {
+    font-size: 13px;
+    font-weight: 900;
+    color: #111;
+}
+
+#icsat-pro .ip-title2 span,
+#icsat-pro .ip-speaker span {
+    margin-right: 6px;
+}
+
+/* ================= KEYNOTE SESSION (MAT GLOW) ================= */
+#icsat-pro .keynote-session {
+    border-left: 6px solid #ff7a6b;
+
+    background: linear-gradient(
+        135deg,
+        rgba(255, 122, 107, 0.10),
+        rgba(255, 122, 107, 0.02)
+    );
+
+    box-shadow: 0 6px 20px rgba(255, 122, 107, 0.15);
+
+    transition: 0.25s ease;
+}
+
+#icsat-pro .keynote-session:hover {
+    box-shadow: 0 10px 28px rgba(255, 122, 107, 0.10);
+    transform: translateY(-2px);
+}
+
+#icsat-pro .keynote-session::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 122, 107, 0.6),
+        transparent
+    );
+}
+
+/* ================= EMPTY / ERROR ================= */
+#icsat-pro .program-empty,
+#icsat-pro .program-error {
+    width: 100%;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+#icsat-pro .program-empty {
+    opacity: 0.55;
+}
+
+#icsat-pro .program-error {
+    border-radius: 14px;
+    background: #fff1f1;
+    color: #9b1c1c;
+}
