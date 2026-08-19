@@ -1,8 +1,68 @@
+/*
+================================================================
+GÜNCEL APPS SCRIPT WEB APP DEPLOYMENT'I
+Google Sheets'teki 6 sayfa (Program, Speakers, Committee,
+Sponsors, Registration, Announcements) tek bir Web App'ten
+?sheet=SAYFA_ADI parametresiyle okunuyor.
+================================================================
+*/
+
+const ICSAT_SHEETS_API_URL =
+    "https://script.google.com/macros/s/AKfycbyJDnHRvfnLPfrvX-dcF_ORBL4wPXeTDq3eXbBrMKP8OaQckqtrxM6rqHK-QnEINlo0/exec";
+
 const API_URL =
-    "https://script.google.com/macros/s/AKfycbzIH5Byk0439cCnI5HRaqpLWjpJ7PkvNEK8TmlMbfnBFf-obrbfCOEEXEHN333zTo-D/exec?sheet=Speakers";
+    `${ICSAT_SHEETS_API_URL}?sheet=Speakers`;
 
 const COMMITTEE_API_URL =
-"https://script.google.com/macros/s/AKfycbzIH5Byk0439cCnI5HRaqpLWjpJ7PkvNEK8TmlMbfnBFf-obrbfCOEEXEHN333zTo-D/exec?sheet=Committee";
+    `${ICSAT_SHEETS_API_URL}?sheet=Committee`;
+
+
+/*
+================================================================
+RETRY YARDIMCISI
+Apps Script Web App'ler bir süre boşta kalınca "cold start"
+gecikmesi yaşıyor ve bazen ilk istekte 404/timeout dönebiliyor.
+Bu yüzden başarısız isteği sessizce, artan bekleme süreleriyle
+(800ms, 1600ms, 3200ms) birkaç kez daha deniyoruz. Başarılı
+isteklerde ekstra gecikme yok — sadece hata durumunda devreye
+giriyor.
+================================================================
+*/
+
+async function icsatFetchJSON(url, retries = 3, backoffMs = 800) {
+
+    let lastError;
+
+    for (let attempt = 0; attempt <= retries; attempt++) {
+
+        try {
+
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`HTTP Error: ${response.status}`);
+            }
+
+            return await response.json();
+
+        } catch (err) {
+
+            lastError = err;
+
+            // Son denemeyse bekleme yapmadan hatayı yukarı fırlat
+            if (attempt < retries) {
+                await new Promise(resolve =>
+                    setTimeout(resolve, backoffMs * Math.pow(2, attempt))
+                );
+            }
+
+        }
+
+    }
+
+    throw lastError;
+
+}
 
 
 const container =
@@ -11,15 +71,13 @@ const container =
 
 async function loadSpeakers() {
 
+    container.innerHTML = `
+        <div class="speakers-loading">Loading speakers…</div>
+    `;
+
     try {
 
-        const response = await fetch(API_URL);
-
-        if (!response.ok) {
-            throw new Error(`HTTP Error: ${response.status}`);
-        }
-
-        const data = await response.json();
+        const data = await icsatFetchJSON(API_URL);
 
         if (!Array.isArray(data)) {
             throw new Error("API bir liste döndürmedi.");
@@ -381,17 +439,14 @@ const committeeContainer =
 
 async function loadCommittee() {
 
+    committeeContainer.innerHTML = `
+        <div class="committee-loading">Loading committee members…</div>
+    `;
+
     try {
 
-        const response =
-            await fetch(COMMITTEE_API_URL);
-
-        if (!response.ok) {
-            throw new Error(`HTTP Error: ${response.status}`);
-        }
-
         const data =
-            await response.json();
+            await icsatFetchJSON(COMMITTEE_API_URL);
 
         if (!Array.isArray(data)) {
             throw new Error("Committee API bir liste döndürmedi.");
@@ -790,28 +845,37 @@ const PROGRAM_ZOOM_LINKS = {
 
 const programContainer = document.getElementById("icsat-pro");
 
+// Program da aynı Apps Script deployment'ından okunuyor
+// (doGet, ?sheet parametresi verilmezse zaten "Program"a düşüyor,
+// ama açıkça belirtmek daha net).
+const PROGRAM_API_URL =
+    `${ICSAT_SHEETS_API_URL}?sheet=Program`;
+
 let programData = [];
+let programLoadedOnce = false;
 
 async function loadProgram() {
 
     // Bu sayfada #icsat-pro yoksa (Speakers/Committee sayfalarındayız) hiç çalışma.
     if (!programContainer) return;
 
+    // Sadece ilk yüklemede "loading" göster; 60 saniyelik arka plan
+    // yenilemelerinde ekranı gereksiz yere sıfırlamayalım.
+    if (!programLoadedOnce) {
+        programContainer.innerHTML = `
+            <div class="program-loading">Loading program…</div>
+        `;
+    }
+
     try {
 
-        const response = await fetch(
-            "https://script.google.com/macros/s/AKfycbwpgubQOKOFOmxFqAbXx34lgMlnO_H4HGX4t8C_6Xh5kE9GndoR0iTxsvXA2hALWFi-/exec"
-        );
-
-        if (!response.ok) {
-            throw new Error(`HTTP Error: ${response.status}`);
-        }
-
-        programData = await response.json();
+        programData = await icsatFetchJSON(PROGRAM_API_URL);
 
         if (!Array.isArray(programData)) {
             throw new Error("Program API bir liste döndürmedi.");
         }
+
+        programLoadedOnce = true;
 
         programBuild();
 
