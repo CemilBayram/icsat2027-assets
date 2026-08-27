@@ -809,7 +809,7 @@ function createCommitteeCard(member) {
 
 /*
 ============================================================
-COMMITTEE BAŞLAT
+COMMITTEE BAŞLATMA
 ============================================================
 */
 
@@ -819,30 +819,33 @@ function initCommittee() {
         document.getElementById("committee-container");
 
     if (!container) {
-        return;
+        return false;
     }
 
-    console.log("Committee container bulundu.");
+    console.log("✅ Committee container bulundu.");
 
     loadCommittee();
+
+    return true;
 }
 
 
 /*
 ============================================================
-NORMAL SAYFA YÜKLEMESİ
+1. NORMAL DOM
 ============================================================
 */
 
-document.addEventListener(
-    "DOMContentLoaded",
-    initCommittee
-);
+document.addEventListener("DOMContentLoaded", function () {
+
+    initCommittee();
+
+});
 
 
 /*
 ============================================================
-ELEMENTOR
+2. ELEMENTOR
 ============================================================
 */
 
@@ -852,9 +855,19 @@ if (window.jQuery) {
         "elementor/frontend/init",
         function () {
 
+            console.log("✅ Elementor frontend hazır.");
+
             setTimeout(function () {
                 initCommittee();
-            }, 500);
+            }, 300);
+
+            setTimeout(function () {
+                initCommittee();
+            }, 1000);
+
+            setTimeout(function () {
+                initCommittee();
+            }, 2000);
 
         }
     );
@@ -864,37 +877,34 @@ if (window.jQuery) {
 
 /*
 ============================================================
-ELEMENTOR GECİKMELİ DOM KONTROLÜ
+3. ELEMENTOR GEÇ YÜKLENİRSE
 ============================================================
 */
 
-const committeeObserver =
-    new MutationObserver(function () {
+let committeeTryCount = 0;
 
-        const container =
-            document.getElementById("committee-container");
+const committeeTryInterval =
+    setInterval(function () {
 
-        if (container) {
+        committeeTryCount++;
 
-            console.log(
-                "Committee container Elementor tarafından bulundu."
-            );
+        if (initCommittee()) {
 
-            initCommittee();
+            clearInterval(committeeTryInterval);
 
-            committeeObserver.disconnect();
         }
 
-    });
+        if (committeeTryCount >= 20) {
 
+            clearInterval(committeeTryInterval);
 
-committeeObserver.observe(
-    document.body,
-    {
-        childList: true,
-        subtree: true
-    }
-);
+            console.log(
+                "⚠️ Committee container 20 denemede bulunamadı."
+            );
+
+        }
+
+    }, 500);
 
 
 
