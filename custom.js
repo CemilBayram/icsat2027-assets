@@ -65,14 +65,17 @@ async function icsatFetchJSON(url, retries = 3, backoffMs = 800) {
 }
 
 
-const container =
-    document.getElementById("icsat-speakers");
-
-
 async function loadSpeakers() {
 
+    const container =
+        document.getElementById("icsat-speakers");
+
+    if (!container) return;
+
     container.innerHTML = `
-        <div class="speakers-loading">Loading speakers…</div>
+        <div class="speakers-loading">
+            Loading speakers…
+        </div>
     `;
 
     try {
@@ -433,14 +436,17 @@ COMMITTEE
 ============================================================
 */
 
-const committeeContainer =
-    document.getElementById("committee-container");
-
-
 async function loadCommittee() {
 
+    const committeeContainer =
+        document.getElementById("committee-container");
+
+    if (!committeeContainer) return;
+
     committeeContainer.innerHTML = `
-        <div class="committee-loading">Loading committee members…</div>
+        <div class="committee-loading">
+            Loading committee members…
+        </div>
     `;
 
     try {
@@ -452,6 +458,7 @@ async function loadCommittee() {
             throw new Error("Committee API bir liste döndürmedi.");
         }
 
+        // mevcut Committee kodunun devamı...
 
         /*
         ====================================================
