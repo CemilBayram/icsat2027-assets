@@ -430,12 +430,6 @@ BAŞLAT
 loadSpeakers();
 
 
-/*
-============================================================
-COMMITTEE
-============================================================
-*/
-
 async function loadCommittee() {
 
     const committeeContainer =
@@ -458,7 +452,8 @@ async function loadCommittee() {
             throw new Error("Committee API bir liste döndürmedi.");
         }
 
-        // mevcut Committee kodunun devamı...
+        console.log("Committee API data:", data);
+        console.log("Committee toplam kayıt:", data.length);
 
         /*
         ====================================================
@@ -467,21 +462,27 @@ async function loadCommittee() {
         */
 
         const activeMembers =
-    data
-        .filter(member =>
-            String(member.Active)
-                .toLowerCase()
-                .trim() === "true"
-        )
-        .sort((a, b) =>
-            Number(a.Order) - Number(b.Order)
+            data
+                .filter(member =>
+                    String(member.Active)
+                        .toLowerCase()
+                        .trim() === "true"
+                )
+                .sort((a, b) =>
+                    Number(a.Order) - Number(b.Order)
+                );
+
+        console.log(
+            "Committee aktif kayıt:",
+            activeMembers.length
         );
 
-console.log(
-    [...new Set(
-        data.map(member => member.Section)
-    )]
-);
+        console.log(
+            "Committee Section değerleri:",
+            [...new Set(
+                data.map(member => member.Section)
+            )]
+        );
 
 
         /*
@@ -542,92 +543,47 @@ console.log(
 
         groups.forEach(group => {
 
-           const members =
-    activeMembers.filter(member => {
+            const members =
+                activeMembers.filter(member => {
 
-        const section =
-            String(member.Section || "")
-                .trim()
-                .replace(/\s+/g, " ")
-                .toLowerCase();
+                    const section =
+                        String(member.Section || "")
+                            .trim()
+                            .replace(/\s+/g, " ")
+                            .toLowerCase();
 
-        const target =
-            String(group.section || "")
-                .trim()
-                .replace(/\s+/g, " ")
-                .toLowerCase();
+                    const target =
+                        String(group.section || "")
+                            .trim()
+                            .replace(/\s+/g, " ")
+                            .toLowerCase();
 
+                    if (
+                        target === "honorary chairs" ||
+                        target === "chairs" ||
+                        target === "co-chairs" ||
+                        target === "secretariat"
+                    ) {
+                        return section === target;
+                    }
 
-        /*
-        ----------------------------------------------------
-        NORMAL BÖLÜMLER
-        ----------------------------------------------------
-        */
+                    if (target === "organizing committee members") {
+                        return section.includes("organizing committee");
+                    }
 
-        if (
-            target === "honorary chairs" ||
-            target === "chairs" ||
-            target === "co-chairs" ||
-            target === "secretariat"
-        ) {
-            return section === target;
-        }
+                    if (target === "scientific committee members") {
+                        return section.includes("scientific committee");
+                    }
 
+                    return section === target;
 
-        /*
-        ----------------------------------------------------
-        ORGANIZING COMMITTEE
-        ----------------------------------------------------
-        */
-
-        if (target === "organizing committee members") {
-
-            return section.includes("organizing committee");
-        }
+                });
 
 
-        /*
-        ----------------------------------------------------
-        SCIENTIFIC COMMITTEE
-        ----------------------------------------------------
-        */
-
-        if (target === "scientific committee members") {
-
-            return section.includes("scientific committee");
-        }
-
-
-        return section === target;
-
-    });
-
-console.log("Committee toplam kayıt:", data.length);
-
-console.log(
-    "Committee aktif kayıt:",
-    activeMembers.length
-);
-
-console.log(
-    "Committee Section değerleri:",
-    [...new Set(
-        data.map(member => member.Section)
-    )]
-);
-
-
-            // Bu bölümde aktif kişi yoksa bölümü oluşturma
             if (members.length === 0) {
                 return;
             }
 
-
-            /*
-            ------------------------------------------------
-            SECTION
-            ------------------------------------------------
-            */
 
             const section =
                 document.createElement("section");
@@ -636,38 +592,19 @@ console.log(
                 `committee-group ${group.className}`;
 
 
-            /*
-            ------------------------------------------------
-            BAŞLIK
-            ------------------------------------------------
-            */
-
             const heading =
                 document.createElement("div");
 
             heading.className =
                 "committee-group-heading";
 
-
             heading.innerHTML = `
-
-                <h2>
-                    ${group.title}
-                </h2>
-
+                <h2>${group.title}</h2>
                 <div class="committee-heading-line"></div>
-
             `;
-
 
             section.appendChild(heading);
 
-
-            /*
-            ------------------------------------------------
-            GRID
-            ------------------------------------------------
-            */
 
             const grid =
                 document.createElement("div");
@@ -687,26 +624,17 @@ console.log(
 
 
             section.appendChild(grid);
-
             committeeContainer.appendChild(section);
 
         });
 
 
-        /*
-        ====================================================
-        HİÇ AKTİF ÜYE YOKSA
-        ====================================================
-        */
-
         if (activeMembers.length === 0) {
 
             committeeContainer.innerHTML = `
-
                 <div class="committee-empty">
                     No active committee members available.
                 </div>
-
             `;
 
         }
@@ -720,11 +648,8 @@ console.log(
             error
         );
 
-
         committeeContainer.innerHTML = `
-
             <div class="committee-error">
-
                 <strong>
                     Committee could not be loaded.
                 </strong>
@@ -732,9 +657,7 @@ console.log(
                 <br><br>
 
                 ${error.message}
-
             </div>
-
         `;
 
     }
@@ -813,6 +736,8 @@ COMMITTEE BAŞLATMA
 ============================================================
 */
 
+let committeeInitialized = false;
+
 function initCommittee() {
 
     const container =
@@ -822,13 +747,18 @@ function initCommittee() {
         return false;
     }
 
+    if (committeeInitialized) {
+        return true;
+    }
+
+    committeeInitialized = true;
+
     console.log("✅ Committee container bulundu.");
 
     loadCommittee();
 
     return true;
 }
-
 
 /*
 ============================================================
