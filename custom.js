@@ -809,7 +809,7 @@ function createCommitteeCard(member) {
 
 /*
 ============================================================
-BAŞLAT
+COMMITTEE BAŞLAT
 ============================================================
 */
 
@@ -818,15 +818,30 @@ function initCommittee() {
     const container =
         document.getElementById("committee-container");
 
-    if (!container) {
-        setTimeout(initCommittee, 100);
-        return;
-    }
+    if (!container) return;
 
     loadCommittee();
 }
 
-initCommittee();
+
+// Normal sayfa yüklemesi
+document.addEventListener(
+    "DOMContentLoaded",
+    initCommittee
+);
+
+
+// Elementor frontend
+if (window.jQuery) {
+
+    jQuery(window).on(
+        "elementor/frontend/init",
+        function () {
+            setTimeout(initCommittee, 100);
+        }
+    );
+
+}
 
 
 /*
