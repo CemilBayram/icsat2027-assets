@@ -430,18 +430,40 @@ BAŞLAT
 loadSpeakers();
 
 
+/*
+============================================================
+COMMITTEE
+============================================================
+*/
+
+let committeeLoading = false;
+let committeeLoaded = false;
+
 async function loadCommittee() {
 
     const committeeContainer =
         document.getElementById("committee-container");
 
-    if (!committeeContainer) return;
+    if (!committeeContainer) {
+        console.log("Committee container bulunamadı.");
+        return;
+    }
 
-    committeeContainer.innerHTML = `
-        <div class="committee-loading">
-            Loading committee members…
-        </div>
-    `;
+    // Aynı anda ikinci API isteği başlatma
+    if (committeeLoading) {
+        console.log("Committee zaten yükleniyor, tekrar başlatılmadı.");
+        return;
+    }
+
+    committeeLoading = true;
+
+    if (!committeeLoaded) {
+        committeeContainer.innerHTML = `
+            <div class="committee-loading">
+                Loading committee members…
+            </div>
+        `;
+    }
 
     try {
 
@@ -461,16 +483,16 @@ async function loadCommittee() {
         ====================================================
         */
 
-        const activeMembers =
-            data
-                .filter(member =>
-                    String(member.Active)
-                        .toLowerCase()
-                        .trim() === "true"
-                )
-                .sort((a, b) =>
-                    Number(a.Order) - Number(b.Order)
-                );
+        const activeMembers = data
+            .filter(member =>
+                String(member.Active)
+                    .trim()
+                    .toLowerCase() === "true"
+            )
+            .sort((a, b) =>
+                Number(a.Order || 0) -
+                Number(b.Order || 0)
+            );
 
         console.log(
             "Committee aktif kayıt:",
@@ -480,110 +502,99 @@ async function loadCommittee() {
         console.log(
             "Committee Section değerleri:",
             [...new Set(
-                data.map(member => member.Section)
+                data.map(member =>
+                    String(member.Section || "").trim()
+                )
             )]
         );
 
-
         /*
         ====================================================
-        COMMITTEE BÖLÜMLERİ
+        GRUPLAR
         ====================================================
         */
 
         const groups = [
-
             {
                 section: "Honorary Chairs",
                 title: "Honorary Chairs",
                 className: "honorary-chairs-section"
             },
-
             {
                 section: "Chairs",
                 title: "Chairs",
                 className: "chairs-section"
             },
-
             {
                 section: "Co-Chairs",
                 title: "Co-Chairs",
                 className: "co-chairs-section"
             },
-
             {
                 section: "Secretariat",
                 title: "Secretariat",
                 className: "secretariat-section"
             },
-
             {
-                section: "Organizing Committee Members",
+                section: "Organizing Committee",
                 title: "Organizing Committee Members",
                 className: "organizing-committee-section"
             },
-
             {
-                section: "Scientific Committee Members",
+                section: "Scientific Committee",
                 title: "Scientific Committee Members",
                 className: "scientific-committee-section"
             }
-
         ];
-
-
-        committeeContainer.innerHTML = "";
-
 
         /*
         ====================================================
-        HER BÖLÜMÜ OLUŞTUR
+        NORMALIZE
         ====================================================
         */
 
+        function normalizeSection(value) {
+            return String(value || "")
+                .trim()
+                .replace(/\s+/g, " ")
+                .toLowerCase();
+        }
+
+        /*
+        ====================================================
+        HTML'I GEÇİCİ ALANDA OLUŞTUR
+        ====================================================
+        */
+
+        const fragment =
+            document.createDocumentFragment();
+
+        let renderedGroupCount = 0;
+
         groups.forEach(group => {
+
+            const target =
+                normalizeSection(group.section);
 
             const members =
                 activeMembers.filter(member => {
 
                     const section =
-                        String(member.Section || "")
-                            .trim()
-                            .replace(/\s+/g, " ")
-                            .toLowerCase();
-
-                    const target =
-                        String(group.section || "")
-                            .trim()
-                            .replace(/\s+/g, " ")
-                            .toLowerCase();
-
-                    if (
-                        target === "honorary chairs" ||
-                        target === "chairs" ||
-                        target === "co-chairs" ||
-                        target === "secretariat"
-                    ) {
-                        return section === target;
-                    }
-
-                    if (target === "organizing committee members") {
-                        return section.includes("organizing committee");
-                    }
-
-                    if (target === "scientific committee members") {
-                        return section.includes("scientific committee");
-                    }
+                        normalizeSection(member.Section);
 
                     return section === target;
-
                 });
 
+            console.log(
+                `Committee "${group.section}":`,
+                members.length
+            );
 
             if (members.length === 0) {
                 return;
             }
 
+            renderedGroupCount++;
 
             const section =
                 document.createElement("section");
@@ -591,6 +602,11 @@ async function loadCommittee() {
             section.className =
                 `committee-group ${group.className}`;
 
+            /*
+            ====================================================
+            BAŞLIK
+            ====================================================
+            */
 
             const heading =
                 document.createElement("div");
@@ -605,13 +621,17 @@ async function loadCommittee() {
 
             section.appendChild(heading);
 
+            /*
+            ====================================================
+            GRID
+            ====================================================
+            */
 
             const grid =
                 document.createElement("div");
 
             grid.className =
                 "committee-grid";
-
 
             members.forEach(member => {
 
@@ -622,14 +642,19 @@ async function loadCommittee() {
 
             });
 
-
             section.appendChild(grid);
-            committeeContainer.appendChild(section);
+
+            fragment.appendChild(section);
 
         });
 
+        /*
+        ====================================================
+        SONUÇ
+        ====================================================
+        */
 
-        if (activeMembers.length === 0) {
+        if (renderedGroupCount === 0) {
 
             committeeContainer.innerHTML = `
                 <div class="committee-empty">
@@ -637,7 +662,33 @@ async function loadCommittee() {
                 </div>
             `;
 
+            console.warn(
+                "Committee: Hiçbir grup oluşturulamadı."
+            );
+
+            return;
         }
+
+        /*
+        ====================================================
+        DOM'A TEK SEFERDE EKLE
+        ====================================================
+        */
+
+        committeeContainer.innerHTML = "";
+        committeeContainer.appendChild(fragment);
+
+        committeeLoaded = true;
+
+        console.log(
+            "✅ Committee render tamamlandı.",
+            "Grup sayısı:",
+            renderedGroupCount,
+            "Kart sayısı:",
+            committeeContainer.querySelectorAll(
+                ".committee-card"
+            ).length
+        );
 
     }
 
@@ -662,6 +713,12 @@ async function loadCommittee() {
 
     }
 
+    finally {
+
+        committeeLoading = false;
+
+    }
+
 }
 
 
@@ -676,27 +733,20 @@ function createCommitteeCard(member) {
     const card =
         document.createElement("article");
 
-
     card.className =
         "committee-card";
 
-
-    /*
-    --------------------------------------------------------
-    KART İÇERİĞİ
-    --------------------------------------------------------
-    */
+    const fullName =
+        member.Title
+            ? `${member.Title} ${member.Name || ""}`.trim()
+            : (member.Name || "").trim();
 
     card.innerHTML = `
 
         <div class="committee-card-content">
 
             <h3 class="committee-name">
-    ${
-        member.Title
-            ? `${member.Title} ${member.Name || ""}`
-            : member.Name || ""
-    }
+                ${fullName}
             </h3>
 
             ${
@@ -708,7 +758,6 @@ function createCommitteeCard(member) {
                       `
                     : ""
             }
-
 
             ${
                 member.Country
@@ -724,19 +773,17 @@ function createCommitteeCard(member) {
 
     `;
 
-
     return card;
-
 }
 
 
 /*
 ============================================================
-COMMITTEE BAŞLATMA
+COMMITTEE INIT
 ============================================================
 */
 
-let committeeInitialized = false;
+let committeeInitDone = false;
 
 function initCommittee() {
 
@@ -747,16 +794,16 @@ function initCommittee() {
         return false;
     }
 
-    if (committeeInitialized) {
-        return true;
-    }
-
-    committeeInitialized = true;
-
     console.log("✅ Committee container bulundu.");
-    console.log("🚀 Committee yükleniyor...");
 
-    loadCommittee();
+    // Aynı init'i tekrar tekrar çalıştırma
+    if (!committeeInitDone) {
+
+        committeeInitDone = true;
+
+        loadCommittee();
+
+    }
 
     return true;
 }
@@ -764,41 +811,79 @@ function initCommittee() {
 
 /*
 ============================================================
-DOM + ELEMENTOR
+DOM
 ============================================================
 */
 
-function startCommitteeWhenReady() {
-
-    if (initCommittee()) {
-        return;
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+        initCommittee();
     }
+);
 
-    let attempts = 0;
 
-    const timer = setInterval(function () {
+/*
+============================================================
+ELEMENTOR
+============================================================
+*/
 
-        attempts++;
+if (window.jQuery) {
+
+    jQuery(window).on(
+        "elementor/frontend/init",
+        function () {
+
+            console.log(
+                "✅ Elementor frontend hazır."
+            );
+
+            setTimeout(initCommittee, 300);
+            setTimeout(initCommittee, 1000);
+            setTimeout(initCommittee, 2000);
+
+        }
+    );
+
+}
+
+
+/*
+============================================================
+ELEMENTOR GEÇ YÜKLENİRSE
+============================================================
+*/
+
+let committeeTryCount = 0;
+
+const committeeTryInterval =
+    setInterval(function () {
+
+        committeeTryCount++;
 
         if (initCommittee()) {
 
-            clearInterval(timer);
-            return;
+            clearInterval(
+                committeeTryInterval
+            );
 
         }
 
-        if (attempts >= 20) {
+        if (committeeTryCount >= 20) {
 
-            clearInterval(timer);
+            clearInterval(
+                committeeTryInterval
+            );
 
             console.log(
-                "⚠️ Committee container bulunamadı."
+                "⚠️ Committee container 20 denemede bulunamadı."
             );
 
         }
 
     }, 500);
-}
+
 
 
 /*
