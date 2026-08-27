@@ -813,8 +813,20 @@ BAŞLAT
 ============================================================
 */
 
-loadCommittee();
+function initCommittee() {
 
+    const container =
+        document.getElementById("committee-container");
+
+    if (!container) {
+        setTimeout(initCommittee, 100);
+        return;
+    }
+
+    loadCommittee();
+}
+
+initCommittee();
 
 
 /*
