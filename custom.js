@@ -818,30 +818,84 @@ function initCommittee() {
     const container =
         document.getElementById("committee-container");
 
-    if (!container) return;
+    if (!container) {
+        return;
+    }
+
+    console.log("Committee container bulundu.");
 
     loadCommittee();
 }
 
 
-// Normal sayfa yüklemesi
+/*
+============================================================
+NORMAL SAYFA YÜKLEMESİ
+============================================================
+*/
+
 document.addEventListener(
     "DOMContentLoaded",
     initCommittee
 );
 
 
-// Elementor frontend
+/*
+============================================================
+ELEMENTOR
+============================================================
+*/
+
 if (window.jQuery) {
 
     jQuery(window).on(
         "elementor/frontend/init",
         function () {
-            setTimeout(initCommittee, 100);
+
+            setTimeout(function () {
+                initCommittee();
+            }, 500);
+
         }
     );
 
 }
+
+
+/*
+============================================================
+ELEMENTOR GECİKMELİ DOM KONTROLÜ
+============================================================
+*/
+
+const committeeObserver =
+    new MutationObserver(function () {
+
+        const container =
+            document.getElementById("committee-container");
+
+        if (container) {
+
+            console.log(
+                "Committee container Elementor tarafından bulundu."
+            );
+
+            initCommittee();
+
+            committeeObserver.disconnect();
+        }
+
+    });
+
+
+committeeObserver.observe(
+    document.body,
+    {
+        childList: true,
+        subtree: true
+    }
+);
+
 
 
 /*
