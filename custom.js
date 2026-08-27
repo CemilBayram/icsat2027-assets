@@ -754,28 +754,76 @@ function initCommittee() {
     committeeInitialized = true;
 
     console.log("✅ Committee container bulundu.");
+    console.log("🚀 Committee yükleniyor...");
 
     loadCommittee();
 
     return true;
 }
 
+
 /*
 ============================================================
-1. NORMAL DOM
+DOM + ELEMENTOR
 ============================================================
 */
 
-document.addEventListener("DOMContentLoaded", function () {
+function startCommitteeWhenReady() {
 
-    initCommittee();
+    if (initCommittee()) {
+        return;
+    }
 
-});
+    let attempts = 0;
+
+    const timer = setInterval(function () {
+
+        attempts++;
+
+        if (initCommittee()) {
+
+            clearInterval(timer);
+            return;
+
+        }
+
+        if (attempts >= 20) {
+
+            clearInterval(timer);
+
+            console.log(
+                "⚠️ Committee container bulunamadı."
+            );
+
+        }
+
+    }, 500);
+}
 
 
 /*
 ============================================================
-2. ELEMENTOR
+NORMAL DOM
+============================================================
+*/
+
+if (document.readyState === "loading") {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        startCommitteeWhenReady
+    );
+
+} else {
+
+    startCommitteeWhenReady();
+
+}
+
+
+/*
+============================================================
+ELEMENTOR
 ============================================================
 */
 
@@ -785,57 +833,16 @@ if (window.jQuery) {
         "elementor/frontend/init",
         function () {
 
-            console.log("✅ Elementor frontend hazır.");
+            console.log(
+                "✅ Elementor frontend hazır."
+            );
 
-            setTimeout(function () {
-                initCommittee();
-            }, 300);
-
-            setTimeout(function () {
-                initCommittee();
-            }, 1000);
-
-            setTimeout(function () {
-                initCommittee();
-            }, 2000);
+            startCommitteeWhenReady();
 
         }
     );
 
 }
-
-
-/*
-============================================================
-3. ELEMENTOR GEÇ YÜKLENİRSE
-============================================================
-*/
-
-let committeeTryCount = 0;
-
-const committeeTryInterval =
-    setInterval(function () {
-
-        committeeTryCount++;
-
-        if (initCommittee()) {
-
-            clearInterval(committeeTryInterval);
-
-        }
-
-        if (committeeTryCount >= 20) {
-
-            clearInterval(committeeTryInterval);
-
-            console.log(
-                "⚠️ Committee container 20 denemede bulunamadı."
-            );
-
-        }
-
-    }, 500);
-
 
 
 /*
