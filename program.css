@@ -1,0 +1,338 @@
+/*
+================================================================
+ICSAT 2027 — SCIENTIFIC PROGRAM STİLLERİ
+ÖNCE custom.css (.icsat-page/.page-header) yüklenmiş olmalı.
+Scope: #icsat-pro
+================================================================
+*/
+
+/* ============================================================
+   ICSAT 2027 — SCIENTIFIC PROGRAM
+   Eklenme tarihi: Program.txt içeriğinden aktarıldı ve
+   #icsat-pro altına scope'landı (Elementor çakışmalarını önlemek
+   için, speaker/committee bölümleriyle aynı prensip).
+   ============================================================ */
+
+/* ================= BASE ================= */
+#icsat-pro {
+    font-family: Inter, sans-serif;
+    background: #f4f6fb;
+    padding: 30px;
+}
+
+#icsat-pro .session-icon {
+    margin-right: 6px;
+}
+
+/* ================= SPECIAL SESSIONS ================= */
+#icsat-pro .ip-session.lunch {
+    border-left: 6px solid #e0a84a;
+    background: linear-gradient(90deg, rgba(224, 168, 74, 0.12), transparent);
+}
+
+#icsat-pro .ip-session.coffee {
+    border-left: 6px solid #9b7bbd;
+    background: linear-gradient(90deg, rgba(155, 123, 189, 0.12), transparent);
+}
+
+/* ================= HEADER ================= */
+#icsat-pro .ip-header {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+#icsat-pro .ip-title {
+    font-size: 34px;
+    font-weight: 900;
+}
+
+#icsat-pro .ip-title--sub {
+    font-size: 20px;
+    font-weight: 800;
+    opacity: 0.85;
+}
+
+/* ================= GRID ================= */
+#icsat-pro .ip-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 18px;
+}
+
+#icsat-pro .ip-grid.online {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+    #icsat-pro .ip-grid,
+    #icsat-pro .ip-grid.online {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 700px) {
+    #icsat-pro .ip-grid,
+    #icsat-pro .ip-grid.online {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ================= CARD ================= */
+#icsat-pro .ip-card {
+    background: white;
+    border-radius: 19px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
+    overflow: hidden;
+}
+
+/* ROOM */
+#icsat-pro .ip-room {
+    background: linear-gradient(135deg, #5f7cff, #7b92ff);
+    color: white;
+    padding: 16px;
+    font-weight: 800;
+    font-size: 20px;
+}
+
+/* ================= SESSION ================= */
+#icsat-pro .ip-session {
+    padding: 15px;
+    border-bottom: 2px solid #eee;
+    position: relative;
+}
+
+/* TIME */
+#icsat-pro .ip-time {
+    font-weight: 800;
+    font-size: 14px;
+    color: #C23B23;
+}
+
+/* TITLE */
+#icsat-pro .ip-title2 {
+    font-size: 14px;
+    margin-top: 5px;
+    margin-right: 75px;
+    font-weight: 700;
+
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+/* SPEAKER */
+#icsat-pro .ip-speaker {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* ================= STATUS BADGE ================= */
+#icsat-pro .ip-badge {
+    position: absolute;
+    right: 10px;
+    top: 3px;
+
+    font-size: 10px;
+    padding: 6px 10px;
+    border-radius: 12px;
+
+    color: white;
+    font-weight: 800;
+    text-align: center;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#icsat-pro .badge-main {
+    font-size: 10px;
+}
+
+#icsat-pro .badge-sub {
+    font-size: 9px;
+    opacity: 0.9;
+    margin-top: 2px;
+}
+
+/* ================= CHAIR BADGE ================= */
+#icsat-pro .chair-badge {
+    display: inline-block;
+    padding: 3px 11px;
+    font-size: 10px;
+    font-weight: 900;
+
+    background: linear-gradient(135deg, #0984e3, #74b9ff);
+    color: white;
+
+    border-radius: 20px;
+    letter-spacing: 0.9px;
+
+    box-shadow: 0 3px 3px rgba(9, 132, 227, 0.4);
+
+    text-transform: uppercase;
+}
+
+#icsat-pro .chair-badge::before {
+    content: "🎤 ";
+}
+
+/* COLORS */
+#icsat-pro .live { background: #2ecc71; }
+#icsat-pro .finished { background: #e74c3c; }
+#icsat-pro .upcoming { background: #3498db; }
+
+/* ================= ZOOM ================= */
+#icsat-pro .zoom-header {
+    margin-top: 6px;
+    font-size: 15px;
+}
+
+#icsat-pro .zoom-header a {
+    display: inline-block;
+    margin-top: 3px;
+    padding: 9px 25px;
+    border-radius: 14px;
+
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    text-decoration: none;
+    font-weight: 900;
+
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    transition: 0.2s;
+}
+
+#icsat-pro .zoom-header a:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* ================= POSTER ================= */
+#icsat-pro .ip-session.poster-session {
+    border-left: 6px solid #8e44ad;
+    background: linear-gradient(135deg, rgba(142, 68, 173, 0.10), rgba(142, 68, 173, 0.03));
+}
+
+#icsat-pro .ip-session.poster-session:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(142, 68, 173, 0.25);
+}
+
+/* ================= BADGES ================= */
+#icsat-pro .oral-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 800;
+    background: #2980b9;
+    color: white;
+    border-radius: 10px;
+}
+
+#icsat-pro .poster-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 10px;
+    background: #6c5ce7;
+    color: white;
+    border-radius: 6px;
+}
+
+#icsat-pro .invited-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    font-size: 13px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #f39c12, #f1c40f);
+    color: #2c3e50;
+    border-radius: 20px;
+}
+
+#icsat-pro .keynote-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 800;
+
+    background: linear-gradient(135deg, #ff256b, #ff98b3);
+    color: white;
+
+    border-radius: 25px;
+    letter-spacing: 0.9px;
+
+    box-shadow: 0 3px 3px rgba(255, 107, 107, 0.5);
+}
+
+/* ================= KEYNOTE SPEAKER EMPHASIS ================= */
+#icsat-pro .keynote-session .ip-speaker {
+    font-size: 13px;
+    font-weight: 900;
+    color: #111;
+}
+
+#icsat-pro .ip-title2 span,
+#icsat-pro .ip-speaker span {
+    margin-right: 6px;
+}
+
+/* ================= KEYNOTE SESSION (MAT GLOW) ================= */
+#icsat-pro .keynote-session {
+    border-left: 6px solid #ff7a6b;
+
+    background: linear-gradient(
+        135deg,
+        rgba(255, 122, 107, 0.10),
+        rgba(255, 122, 107, 0.02)
+    );
+
+    box-shadow: 0 6px 20px rgba(255, 122, 107, 0.15);
+
+    transition: 0.25s ease;
+}
+
+#icsat-pro .keynote-session:hover {
+    box-shadow: 0 10px 28px rgba(255, 122, 107, 0.10);
+    transform: translateY(-2px);
+}
+
+#icsat-pro .keynote-session::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 122, 107, 0.6),
+        transparent
+    );
+}
+
+/* ================= EMPTY / ERROR ================= */
+#icsat-pro .program-empty,
+#icsat-pro .program-error {
+    width: 100%;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+#icsat-pro .program-empty {
+    opacity: 0.55;
+}
+
+#icsat-pro .program-error {
+    border-radius: 14px;
+    background: #fff1f1;
+    color: #9b1c1c;
+}
+

@@ -1,0 +1,230 @@
+/*
+================================================================
+ICSAT 2027 — MENÜ STİLLERİ
+ÖNCE custom.css (.icsat-page/.page-header) yüklenmiş olmalı.
+Scope: #icsat-menu / .icsat-menu
+================================================================
+*/
+
+/* ================= ICSAT Menü ================= */
+
+.icsat-menu-loading,
+.icsat-menu-error {
+  padding: 14px 24px;
+  font-size: 14px;
+  color: #4d4d58;
+}
+
+.icsat-menu-error { color: #9b1c1c; }
+
+.icsat-menu {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #e7eaf0;
+  box-shadow: 0 2px 14px rgba(48, 32, 111, 0.06);
+  font-family: inherit;
+}
+
+/* Üst kenarda ince marka-rengi çizgi, sitenin genel kimliğiyle uyumlu */
+.icsat-menu::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #30206f, #5f7cff 50%, #7b92ff);
+}
+
+.icsat-menu-links {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+}
+
+.icsat-menu-item {
+  position: relative;
+}
+
+.icsat-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #30206f;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14.5px;
+  padding: 14px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+/* Hover'da büyüyen alt çizgi */
+.icsat-menu-link::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 8px;
+  height: 2px;
+  background: linear-gradient(90deg, #30206f, #7b92ff);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
+}
+
+.icsat-menu-link:hover {
+  color: #5f7cff;
+}
+
+.icsat-menu-link:hover::after {
+  transform: scaleX(1);
+}
+
+.icsat-menu-link.is-active {
+  color: #30206f;
+}
+
+.icsat-menu-link.is-active::after {
+  transform: scaleX(1);
+}
+
+.icsat-menu-chevron {
+  transition: transform 0.2s ease;
+}
+
+.has-submenu.is-open > .icsat-menu-parent .icsat-menu-chevron {
+  transform: rotate(180deg);
+}
+
+.icsat-menu-item.is-active-parent > .icsat-menu-parent {
+  color: #30206f;
+}
+
+.icsat-menu-item.is-active-parent > .icsat-menu-parent::after {
+  transform: scaleX(1);
+}
+
+/* ---- Alt menü (dropdown) paneli ---- */
+.icsat-submenu {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 210px;
+  background: #ffffff;
+  border: 1px solid #e7eaf0;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(48, 32, 111, 0.14);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+}
+
+.has-submenu.is-open .icsat-submenu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.icsat-submenu .icsat-menu-link {
+  padding: 10px 12px;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.icsat-submenu .icsat-menu-link::after { display: none; }
+
+.icsat-submenu .icsat-menu-link:hover {
+  background: #f1f3f7;
+}
+
+.icsat-submenu li + li { margin-top: 2px; }
+
+/* ---- Mobil hamburger ---- */
+.icsat-menu-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.icsat-menu-toggle span {
+  width: 22px;
+  height: 2px;
+  border-radius: 2px;
+  background: #30206f;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.icsat-menu-toggle.is-active span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.icsat-menu-toggle.is-active span:nth-child(2) {
+  opacity: 0;
+}
+.icsat-menu-toggle.is-active span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+@media (max-width: 768px) {
+  .icsat-menu-toggle { display: flex; order: 2; }
+
+  .icsat-menu-links {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    background: #ffffff;
+    border-bottom: 1px solid #e7eaf0;
+    box-shadow: 0 12px 24px rgba(48, 32, 111, 0.1);
+    padding: 8px;
+    display: none;
+    gap: 2px;
+  }
+
+  .icsat-menu-links.is-open { display: flex; }
+
+  .icsat-menu-link { width: 100%; padding: 12px 14px; }
+  .icsat-menu-link::after { display: none; }
+
+  /* Mobilde dropdown, absolute panel değil normal akışta açılır */
+  .icsat-submenu {
+    position: static;
+    box-shadow: none;
+    border: none;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    max-height: 0;
+    overflow: hidden;
+    padding: 0;
+    transition: max-height 0.2s ease;
+  }
+
+  .has-submenu.is-open .icsat-submenu {
+    max-height: 400px;
+    padding: 4px 0 4px 12px;
+  }
+}
