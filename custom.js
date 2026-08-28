@@ -1,3 +1,6 @@
+console.log("🔥 ICSAT CUSTOM JS — YENİ SÜRÜM — 28 AĞUSTOS 2026");
+alert("YENİ ICSAT CUSTOM.JS ÇALIŞIYOR");
+
 /*
 ================================================================
 GÜNCEL APPS SCRIPT WEB APP DEPLOYMENT'I
