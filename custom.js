@@ -1,5 +1,7 @@
-console.log("🔥 ICSAT CUSTOM JS — YENİ SÜRÜM — 28 AĞUSTOS 2026");
-alert("YENİ ICSAT CUSTOM.JS ÇALIŞIYOR");
+console.log(
+    "%c🔥 ICSAT CUSTOM.JS YENİ SÜRÜM ÇALIŞIYOR 🔥",
+    "color:red;font-size:20px;font-weight:bold;"
+);
 
 /*
 ================================================================
