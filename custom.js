@@ -14,7 +14,7 @@ Sponsors, Registration, Announcements) tek bir Web App'ten
 
 const ICSAT_SHEETS_API_URL =
     "https://script.google.com/macros/s/AKfycbyJDnHRvfnLPfrvX-dcF_ORBL4wPXeTDq3eXbBrMKP8OaQckqtrxM6rqHK-QnEINlo0/exec";
-     
+
 const API_URL =
     `${ICSAT_SHEETS_API_URL}?sheet=Speakers`;
 
@@ -43,11 +43,11 @@ async function icsatFetchJSON(url, retries = 3, backoffMs = 800) {
         try {
 
             const response = await fetch(
-    `${url}${url.includes("?") ? "&" : "?"}_=${Date.now()}`,
-    {
-        cache: "no-store"
-    }
-);
+                `${url}${url.includes("?") ? "&" : "?"}_=${Date.now()}`,
+                {
+                    cache: "no-store"
+                }
+            );
 
             if (!response.ok) {
                 throw new Error(`HTTP Error: ${response.status}`);
@@ -74,6 +74,12 @@ async function icsatFetchJSON(url, retries = 3, backoffMs = 800) {
 
 }
 
+
+/*
+============================================================
+SPEAKERS
+============================================================
+*/
 
 async function loadSpeakers() {
 
@@ -433,7 +439,7 @@ function createSpeakerCard(speaker) {
 
 /*
 ================================================================
-BAŞLAT SPEAKER (Committee ile aynı sağlam init deseni)
+BAŞLAT SPEAKER (retry destekli sağlam init deseni)
 ================================================================
 */
 
@@ -951,31 +957,6 @@ const committeeTryInterval =
     }, 500);
 
 
-
-/*
-============================================================
-ELEMENTOR
-============================================================
-*/
-
-if (window.jQuery) {
-
-    jQuery(window).on(
-        "elementor/frontend/init",
-        function () {
-
-            console.log(
-                "✅ Elementor frontend hazır."
-            );
-
-            startCommitteeWhenReady();
-
-        }
-    );
-
-}
-
-
 /*
 ================================================================
 ICSAT 2027 — SCIENTIFIC PROGRAM
@@ -1009,7 +990,10 @@ const PROGRAM_ZOOM_LINKS = {
     // "Online Session - 3": "https://zoom.us/j/XXXXXXXXXXX",
 };
 
-const programContainer = document.getElementById("icsat-pro");
+// DİKKAT: artık const DEĞİL, let — initProgram() bu değişkeni
+// container her bulunduğunda yeniden atıyor (Speakers/Committee
+// ile aynı sağlam init deseni).
+let programContainer = document.getElementById("icsat-pro");
 
 // Program da aynı Apps Script deployment'ından okunuyor
 // (doGet, ?sheet parametresi verilmezse zaten "Program"a düşüyor,
@@ -1322,12 +1306,60 @@ function programBuild(search = "") {
 
 /*
 ================================================================
-BAŞLAT
+BAŞLAT PROGRAM (retry destekli sağlam init deseni)
 ================================================================
 */
 
-loadProgram();
-setInterval(loadProgram, 60000);
+let programInitDone = false;
+
+function initProgram() {
+
+    programContainer = document.getElementById("icsat-pro");
+
+    if (!programContainer) {
+        return false;
+    }
+
+    console.log("✅ Program container bulundu.");
+
+    if (!programInitDone) {
+        programInitDone = true;
+        loadProgram();
+        setInterval(loadProgram, 60000);
+    }
+
+    return true;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    initProgram();
+});
+
+if (window.jQuery) {
+    jQuery(window).on("elementor/frontend/init", function () {
+        console.log("✅ Elementor frontend hazır (program).");
+        setTimeout(initProgram, 300);
+        setTimeout(initProgram, 1000);
+        setTimeout(initProgram, 2000);
+    });
+}
+
+let programTryCount = 0;
+
+const programTryInterval = setInterval(function () {
+
+    programTryCount++;
+
+    if (initProgram()) {
+        clearInterval(programTryInterval);
+    }
+
+    if (programTryCount >= 20) {
+        clearInterval(programTryInterval);
+        console.log("⚠️ Program container 20 denemede bulunamadı.");
+    }
+
+}, 500);
 
 
 // ==== ICSAT MENU MODÜLÜ (alt menü destekli) ====
