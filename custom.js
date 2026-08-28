@@ -433,11 +433,67 @@ function createSpeakerCard(speaker) {
 
 /*
 ================================================================
-BAŞLAT
+BAŞLAT SPEAKER (Committee ile aynı sağlam init deseni)
 ================================================================
 */
 
-loadSpeakers();
+let speakersInitDone = false;
+
+function initSpeakers() {
+
+    const container =
+        document.getElementById("icsat-speakers");
+
+    if (!container) {
+        return false;
+    }
+
+    console.log("✅ Speakers container bulundu.");
+
+    if (!speakersInitDone) {
+        speakersInitDone = true;
+        loadSpeakers();
+    }
+
+    return true;
+}
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+        initSpeakers();
+    }
+);
+
+if (window.jQuery) {
+    jQuery(window).on(
+        "elementor/frontend/init",
+        function () {
+            console.log("✅ Elementor frontend hazır (speakers).");
+            setTimeout(initSpeakers, 300);
+            setTimeout(initSpeakers, 1000);
+            setTimeout(initSpeakers, 2000);
+        }
+    );
+}
+
+let speakersTryCount = 0;
+
+const speakersTryInterval =
+    setInterval(function () {
+
+        speakersTryCount++;
+
+        if (initSpeakers()) {
+            clearInterval(speakersTryInterval);
+        }
+
+        if (speakersTryCount >= 20) {
+            clearInterval(speakersTryInterval);
+            console.log("⚠️ Speakers container 20 denemede bulunamadı.");
+        }
+
+    }, 500);
 
 
 /*
