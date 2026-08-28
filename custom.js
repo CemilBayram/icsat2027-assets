@@ -9,7 +9,7 @@ Sponsors, Registration, Announcements) tek bir Web App'ten
 
 const ICSAT_SHEETS_API_URL =
     "https://script.google.com/macros/s/AKfycbyeFn9NcD05vicewVxLUNEquQJHHWglBGC-z4oZK_UaQN7SboashQnQDGdY2uSrQ8kw-A/exec";
-
+     
 const API_URL =
     `${ICSAT_SHEETS_API_URL}?sheet=Speakers`;
 
@@ -37,7 +37,12 @@ async function icsatFetchJSON(url, retries = 3, backoffMs = 800) {
 
         try {
 
-            const response = await fetch(url);
+            const response = await fetch(
+    `${url}${url.includes("?") ? "&" : "?"}_=${Date.now()}`,
+    {
+        cache: "no-store"
+    }
+);
 
             if (!response.ok) {
                 throw new Error(`HTTP Error: ${response.status}`);
