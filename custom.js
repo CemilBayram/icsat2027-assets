@@ -8,7 +8,7 @@ Sponsors, Registration, Announcements) tek bir Web App'ten
 */
 
 const ICSAT_SHEETS_API_URL =
-    "https://script.google.com/macros/s/AKfycbyJDnHRvfnLPfrvX-dcF_ORBL4wPXeTDq3eXbBrMKP8OaQckqtrxM6rqHK-QnEINlo0/exec";
+    "https://script.google.com/macros/s/AKfycbyeFn9NcD05vicewVxLUNEquQJHHWglBGC-z4oZK_UaQN7SboashQnQDGdY2uSrQ8kw-A/exec";
 
 const API_URL =
     `${ICSAT_SHEETS_API_URL}?sheet=Speakers`;
