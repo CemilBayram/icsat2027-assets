@@ -898,26 +898,6 @@ const committeeTryInterval =
 
 /*
 ============================================================
-NORMAL DOM
-============================================================
-*/
-
-if (document.readyState === "loading") {
-
-    document.addEventListener(
-        "DOMContentLoaded",
-        startCommitteeWhenReady
-    );
-
-} else {
-
-    startCommitteeWhenReady();
-
-}
-
-
-/*
-============================================================
 ELEMENTOR
 ============================================================
 */
