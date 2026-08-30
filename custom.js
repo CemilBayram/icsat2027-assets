@@ -1442,7 +1442,7 @@ function socialGetIcon(type = "", title = "") {
     if (/tour|gezi|excursion|trip/.test(t)) return "🚌";
     if (/reception|welcome|karşılama|kokteyl|cocktail/.test(t)) return "🤝";
     if (/cultural|concert|müzik|show|folklor|dance/.test(t)) return "🎭";
-    if (/ceremony|opening|closing|açılış|kapanış/.test(t)) return "🎓";
+    if (/ceremony|opening|closing|açılış|kapanış/.test(t)) return "✨";
     if (/breakfast|coffee|kahvaltı|kahve/.test(t)) return "☕";
     if (/museum|müze|visit|ziyaret/.test(t)) return "🏛️";
     if (/mountain|palandöken|ski|kayak/.test(t)) return "🏔️";
