@@ -2615,3 +2615,171 @@
     padding: 4px 0 4px 12px;
   }
 }
+
+/* =========================================================
+   SOSYAL PROGRAM MODÜLÜ (#icsat-social)
+   Program modülüyle aynı marka rengi (#30206f) ve kart dilini
+   kullanan, dikey "timeline" (zaman çizelgesi) tasarımı.
+   ========================================================= */
+
+#icsat-social {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* ================= HEADER ================= */
+#icsat-social .sp-header {
+    text-align: center;
+    margin: 40px 0 24px;
+}
+
+#icsat-social .sp-title--main {
+    font-size: 34px;
+    font-weight: 900;
+    color: #30206f;
+}
+
+#icsat-social .sp-title--sub {
+    font-size: 20px;
+    font-weight: 800;
+    opacity: 0.85;
+    margin-top: 4px;
+}
+
+/* ================= TIMELINE ================= */
+#icsat-social .sp-timeline {
+    position: relative;
+    padding-left: 46px;
+}
+
+#icsat-social .sp-timeline::before {
+    content: "";
+    position: absolute;
+    left: 17px;
+    top: 6px;
+    bottom: 6px;
+    width: 3px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, #30206f, #5f7cff 55%, #7b92ff);
+    opacity: 0.35;
+}
+
+/* ================= EVENT ROW ================= */
+#icsat-social .sp-event {
+    position: relative;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: flex-start;
+}
+
+#icsat-social .sp-dot {
+    position: absolute;
+    left: -46px;
+    top: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+
+    background: linear-gradient(135deg, #5f7cff, #7b92ff);
+    box-shadow: 0 6px 16px rgba(95, 124, 255, 0.4);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+
+    flex-shrink: 0;
+}
+
+/* ================= CARD ================= */
+#icsat-social .sp-card {
+    width: 100%;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
+    padding: 16px 20px;
+    transition: 0.25s ease;
+}
+
+#icsat-social .sp-event:hover .sp-card {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px rgba(48, 32, 111, 0.16);
+}
+
+#icsat-social .sp-time {
+    font-weight: 800;
+    font-size: 14px;
+    color: #C23B23;
+}
+
+#icsat-social .sp-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #30206f;
+    margin-top: 4px;
+}
+
+#icsat-social .sp-location {
+    font-size: 13px;
+    color: #555;
+    margin-top: 6px;
+}
+
+#icsat-social .sp-desc {
+    font-size: 14px;
+    color: #444;
+    margin-top: 8px;
+    line-height: 1.5;
+}
+
+#icsat-social .sp-note {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+
+    background: linear-gradient(135deg, #f39c12, #f1c40f);
+    color: #2c3e50;
+    border-radius: 20px;
+}
+
+/* ================= EMPTY / LOADING / ERROR ================= */
+#icsat-social .social-loading,
+#icsat-social .social-empty,
+#icsat-social .social-error {
+    width: 100%;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+#icsat-social .social-empty,
+#icsat-social .social-loading {
+    opacity: 0.55;
+}
+
+#icsat-social .social-error {
+    border-radius: 14px;
+    background: #fff1f1;
+    color: #9b1c1c;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 600px) {
+    #icsat-social .sp-timeline {
+        padding-left: 38px;
+    }
+
+    #icsat-social .sp-dot {
+        left: -38px;
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+
+    #icsat-social .sp-title--main {
+        font-size: 26px;
+    }
+}
