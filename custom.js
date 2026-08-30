@@ -1440,7 +1440,7 @@ function socialGetIcon(type = "", title = "") {
 
     if (/gala|dinner|banquet|yemek/.test(t)) return "🍽️";
     if (/tour|gezi|excursion|trip/.test(t)) return "🚌";
-    if (/reception|welcome|karşılama|kokteyl|cocktail/.test(t)) return "🥂";
+    if (/reception|welcome|karşılama|kokteyl|cocktail/.test(t)) return "🤝";
     if (/cultural|concert|müzik|show|folklor|dance/.test(t)) return "🎭";
     if (/ceremony|opening|closing|açılış|kapanış/.test(t)) return "🎓";
     if (/breakfast|coffee|kahvaltı|kahve/.test(t)) return "☕";
