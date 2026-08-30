@@ -1362,6 +1362,236 @@ const programTryInterval = setInterval(function () {
 }, 500);
 
 
+/*
+================================================================
+SOSYAL PROGRAM MODÜLÜ
+Aynı Apps Script deployment'ından "SocialProgram" adlı sekmeyi
+okur. Program modülüyle birebir aynı sağlam init deseni
+(DOMContentLoaded + elementor/frontend/init + retry interval)
+ve aynı tarih/gün parse yardımcıları (programParseDayISO,
+programFormatDayLabel) kullanılır — tekrar kod yazılmaz.
+
+Google Sheet "SocialProgram" sekmesindeki beklenen sütunlar:
+  day          -> "5.May" gibi (Program sekmesiyle aynı format)
+  time         -> "19:00"
+  endTime      -> "22:00" (opsiyonel, boş bırakılabilir)
+  title        -> "Gala Dinner"
+  location     -> "Dedeman Hotel, Erzurum"
+  type         -> "gala" | "tour" | "reception" | "excursion" |
+                   "cultural" | "ceremony" | "meal" | "" (serbest metin,
+                   ikon eşlemesi anahtar kelimeye göre otomatik yapılır)
+  description  -> "Açık büfe akşam yemeği ve canlı müzik..."
+  note         -> "Kayıt gerekli / Ücretsizdir" gibi kısa not (opsiyonel)
+
+Hocaların yapması gereken tek şey bu sekime satır eklemek/
+düzenlemek — sayfa 60 saniyede bir otomatik güncellenir.
+================================================================
+*/
+
+let socialContainer = document.getElementById("icsat-social");
+
+const SOCIAL_API_URL =
+    `${ICSAT_SHEETS_API_URL}?sheet=SocialProgram`;
+
+let socialData = [];
+let socialLoadedOnce = false;
+
+async function loadSocial() {
+
+    // Bu sayfada #icsat-social yoksa hiç çalışma.
+    if (!socialContainer) return;
+
+    if (!socialLoadedOnce) {
+        socialContainer.innerHTML = `
+            <div class="social-loading">Loading social program…</div>
+        `;
+    }
+
+    try {
+
+        socialData = await icsatFetchJSON(SOCIAL_API_URL);
+
+        if (!Array.isArray(socialData)) {
+            throw new Error("Social Program API bir liste döndürmedi.");
+        }
+
+        socialLoadedOnce = true;
+
+        socialBuild();
+
+    } catch (err) {
+
+        console.error("Sosyal program yüklenemedi:", err);
+
+        socialContainer.innerHTML = `
+            <div class="social-error">
+                <strong>Social program could not be loaded.</strong>
+                <br><br>
+                ${err.message}
+            </div>
+        `;
+    }
+}
+
+/* ================= İKON EŞLEME ================= */
+
+function socialGetIcon(type = "", title = "") {
+    const t = `${type} ${title}`.toLowerCase();
+
+    if (/gala|dinner|banquet|yemek/.test(t)) return "🍽️";
+    if (/tour|gezi|excursion|trip/.test(t)) return "🚌";
+    if (/reception|welcome|karşılama|kokteyl|cocktail/.test(t)) return "🥂";
+    if (/cultural|concert|müzik|show|folklor|dance/.test(t)) return "🎭";
+    if (/ceremony|opening|closing|açılış|kapanış/.test(t)) return "🎓";
+    if (/breakfast|coffee|kahvaltı|kahve/.test(t)) return "☕";
+    if (/museum|müze|visit|ziyaret/.test(t)) return "🏛️";
+    if (/mountain|palandöken|ski|kayak/.test(t)) return "🏔️";
+
+    return "📍";
+}
+
+/* ================= KART OLUŞTUR ================= */
+
+function socialCreateCard(event) {
+
+    const el = document.createElement("div");
+    el.className = "sp-event icsat-reveal";
+
+    const timeRange = event.endTime
+        ? `${event.time} – ${event.endTime}`
+        : `${event.time || ""}`;
+
+    el.innerHTML = `
+        <div class="sp-dot">${socialGetIcon(event.type, event.title)}</div>
+        <div class="sp-card">
+            <div class="sp-time">${timeRange}</div>
+            <div class="sp-title">${event.title || ""}</div>
+            ${event.location ? `<div class="sp-location">📍 ${event.location}</div>` : ""}
+            ${event.description ? `<div class="sp-desc">${event.description}</div>` : ""}
+            ${event.note ? `<div class="sp-note">${event.note}</div>` : ""}
+        </div>
+    `;
+
+    return el;
+}
+
+/* ================= BUILD ================= */
+
+function socialBuild() {
+
+    socialContainer.innerHTML = "";
+
+    // Program modülüyle aynı gün parse mantığı yeniden kullanılıyor.
+    const dayMap = {};
+    socialData.forEach(s => {
+        const raw = s.day;
+        if (!(raw in dayMap)) {
+            const iso = programParseDayISO(raw);
+            if (iso) dayMap[raw] = iso;
+        }
+    });
+
+    const sortedDayKeys = Object.keys(dayMap).sort((a, b) => dayMap[a].localeCompare(dayMap[b]));
+
+    if (sortedDayKeys.length === 0) {
+        socialContainer.innerHTML = `<div class="social-empty">No social program items available yet.</div>`;
+        return;
+    }
+
+    sortedDayKeys.forEach(dayKey => {
+        const iso = dayMap[dayKey];
+
+        const seenRows = new Set();
+        const dayEvents = socialData.filter(s => {
+            if (s.day !== dayKey) return false;
+
+            const rowKey = JSON.stringify([s.day, s.time, s.title, s.location]);
+            if (seenRows.has(rowKey)) return false;
+            seenRows.add(rowKey);
+            return true;
+        });
+
+        if (dayEvents.length === 0) return;
+
+        socialContainer.insertAdjacentHTML("beforeend", `
+            <div class="sp-header">
+                <div class="sp-title--main">ICSAT 2027 Social Program</div>
+                <div class="sp-title--sub">${programFormatDayLabel(iso)}</div>
+            </div>
+        `);
+
+        const timeline = document.createElement("div");
+        timeline.className = "sp-timeline";
+
+        dayEvents
+            .slice()
+            .sort((a, b) => (a.time || "").localeCompare(b.time || ""))
+            .forEach(event => {
+                timeline.appendChild(socialCreateCard(event));
+            });
+
+        socialContainer.appendChild(timeline);
+    });
+}
+
+/*
+================================================================
+BAŞLAT SOSYAL PROGRAM (retry destekli sağlam init deseni)
+================================================================
+*/
+
+let socialInitDone = false;
+
+function initSocial() {
+
+    socialContainer = document.getElementById("icsat-social");
+
+    if (!socialContainer) {
+        return false;
+    }
+
+    console.log("✅ Sosyal Program container bulundu.");
+
+    if (!socialInitDone) {
+        socialInitDone = true;
+        loadSocial();
+        setInterval(loadSocial, 60000);
+    }
+
+    return true;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    initSocial();
+});
+
+if (window.jQuery) {
+    jQuery(window).on("elementor/frontend/init", function () {
+        console.log("✅ Elementor frontend hazır (sosyal program).");
+        setTimeout(initSocial, 300);
+        setTimeout(initSocial, 1000);
+        setTimeout(initSocial, 2000);
+    });
+}
+
+let socialTryCount = 0;
+
+const socialTryInterval = setInterval(function () {
+
+    socialTryCount++;
+
+    if (initSocial()) {
+        clearInterval(socialTryInterval);
+    }
+
+    if (socialTryCount >= 20) {
+        clearInterval(socialTryInterval);
+        console.log("⚠️ Sosyal Program container 20 denemede bulunamadı.");
+    }
+
+}, 500);
+
+
 // ==== ICSAT MENU MODÜLÜ (alt menü destekli) ====
 (function () {
   if (window.__ICSAT_MENU_INIT__) return;
