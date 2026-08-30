@@ -1079,7 +1079,7 @@ function programParseDayISO(dayRaw) {
 }
 
 function programFormatDayLabel(iso) {
-    return new Date(iso + "T00:00:00").toLocaleDateString("tr-TR", {
+    return new Date(iso + "T00:00:00").toLocaleDateString("en-GB", {
         day: "2-digit", month: "long", year: "numeric", weekday: "long"
     });
 }
