@@ -1718,5 +1718,3 @@ const socialTryInterval = setInterval(function () {
 
   document.addEventListener("DOMContentLoaded", icsatRenderMenu);
 })();
-
-// v1.0.0 test - 2026-08-31
