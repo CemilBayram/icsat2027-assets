@@ -2,7 +2,7 @@ console.log(
     "%c🔥 ICSAT CUSTOM.JS YENİ SÜRÜM ÇALIŞIYOR 🔥",
     "color:red;font-size:20px;font-weight:bold;"
 );
-console.log("ICSAT ASSETS — v1.0.3");
+console.log("ICSAT ASSETS — v1.0.4");
 
 /*
 ================================================================
