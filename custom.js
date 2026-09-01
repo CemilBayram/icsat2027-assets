@@ -1884,14 +1884,28 @@ function timelineCreateEvent(row) {
 
 function timelineBuild() {
 
+    const headerHtml = `
+        <header class="tl-header">
+            <div class="tl-logo">ICSAT</div>
+            <div>
+                <h2 class="tl-title">ICSAT — Congress Schedule &amp; Presentation Guidelines</h2>
+                <p class="tl-lead">Key dates, presentation types, and submission rules.</p>
+            </div>
+        </header>
+    `;
+
     if (!Array.isArray(timelineData) || timelineData.length === 0) {
         timelineContainer.innerHTML = `
-            <div class="timeline-empty">No schedule information available yet.</div>
+            <div class="tl-wrap">
+                <div class="tl-card">
+                    ${headerHtml}
+                    <div class="timeline-empty">No schedule information available yet.</div>
+                </div>
+            </div>
         `;
         return;
     }
 
-    // Aynı satırın birebir tekrarını ele (dedup) — diğer modüllerle aynı desen
     const seenRows = new Set();
     const rows = timelineData.filter(row => {
         const key = JSON.stringify(row);
@@ -1900,12 +1914,19 @@ function timelineBuild() {
         return true;
     });
 
-    // Order sütununa göre sırala; boşsa sheet'teki satır sırası korunur
+     // Order sütununa göre sırala; boşsa sheet'teki satır sırası korunur
     rows.sort((a, b) => (Number(a.Order) || 0) - (Number(b.Order) || 0));
 
-    const html = rows.map(timelineCreateEvent).join("");
+    const eventsHtml = rows.map(timelineCreateEvent).join("");
 
-    timelineContainer.innerHTML = `<div class="timeline">${html}</div>`;
+    timelineContainer.innerHTML = `
+        <div class="tl-wrap">
+            <div class="tl-card">
+                ${headerHtml}
+                <div class="timeline">${eventsHtml}</div>
+            </div>
+        </div>
+    `;
 }
 
 /*
