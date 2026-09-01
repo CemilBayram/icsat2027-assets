@@ -1153,6 +1153,9 @@ function programFormatDayLabel(iso) {
 
 /* ================= DURUM ================= */
 
+const PROGRAM_SOON_THRESHOLD_MIN = 15;   // "Starting Soon" (turuncu) bu dakikadan az kala başlar
+const PROGRAM_ENDING_THRESHOLD_PCT = 85; // Oturumun son %15'inde "Ending soon" gösterilir
+
 function programGetStatus(session, iso) {
     const start = new Date(`${iso}T${session.start || "00:00"}:00+03:00`);
     const end = new Date(`${iso}T${session.end || "00:00"}:00+03:00`);
@@ -1160,7 +1163,24 @@ function programGetStatus(session, iso) {
 
     if (now > end) return "finished";
     if (now >= start) return "live";
+
+    const minsUntilStart = (start - now) / 60000;
+    if (minsUntilStart <= PROGRAM_SOON_THRESHOLD_MIN) return "soon";
+
     return "upcoming";
+}
+
+// Canlı bir oturumun ne kadarının geçtiğini (%) ve son %15'te olup olmadığını hesaplar.
+function programGetProgress(session, iso) {
+    const start = new Date(`${iso}T${session.start || "00:00"}:00+03:00`);
+    const end = new Date(`${iso}T${session.end || "00:00"}:00+03:00`);
+    const now = new Date();
+
+    const total = end - start;
+    if (total <= 0) return { pct: 0, ending: false };
+
+    const pct = Math.min(100, Math.max(0, ((now - start) / total) * 100));
+    return { pct, ending: pct >= PROGRAM_ENDING_THRESHOLD_PCT };
 }
 
 function programGetTimeLeft(session, iso) {
@@ -1234,24 +1254,48 @@ function programCreateSession(session, iso) {
     }
 
     let badgeHTML = "";
-    if (status === "upcoming") {
+    let progressHTML = "";
+
+    if (status === "upcoming" || status === "soon") {
         badgeHTML = `
-            <div class="badge-main">UPCOMING</div>
+            <div class="badge-main">${status === "soon" ? "STARTING SOON" : "UPCOMING"}</div>
             <div class="badge-sub">${programGetTimeLeft(session, iso)}</div>
         `;
     } else if (status === "live") {
-        badgeHTML = `<div class="badge-main">LIVE NOW</div>`;
+        const { pct, ending } = programGetProgress(session, iso);
+
+        badgeHTML = `
+            <div class="badge-main">LIVE NOW</div>
+            ${ending ? `<div class="badge-sub">Ending soon</div>` : ""}
+        `;
+
+        progressHTML = `
+            <div class="progress-track">
+                <div class="progress-fill ${ending ? "ending" : ""}" style="width:${pct.toFixed(0)}%"></div>
+            </div>
+        `;
     } else {
         badgeHTML = `<div class="badge-main">FINISHED</div>`;
     }
 
+    // Sticky "şu an canlı" bandının ve programRefreshBadges()'in her oturumu
+    // veriye tekrar erişmeden, DOM üzerinden tanıyabilmesi için gerekli bilgiler.
+    const sessionId = `sess-${iso}-${(session.room || "").replace(/\s+/g, "_")}-${(session.start || "").replace(":", "")}`;
+
     const el = document.createElement("div");
-    el.className = `ip-session ${special} ${isPoster ? "poster-session" : ""} ${isKeynote ? "keynote-session" : ""}`;
+    el.id = sessionId;
+    el.className = `ip-session ${special} ${isPoster ? "poster-session" : ""} ${isKeynote ? "keynote-session" : ""} ${status === "live" ? "is-live" : ""}`;
+    el.dataset.iso = iso;
+    el.dataset.start = session.start || "";
+    el.dataset.end = session.end || "";
+    el.dataset.room = session.room || "";
+    el.dataset.title = session.title || "";
 
     el.innerHTML = `
         <div class="ip-time">${session.start} - ${session.end}</div>
         <div class="ip-title2">${typeBadge} ${session.title || ""}</div>
         <div class="ip-speaker">${speakerBadge} ${session.speaker || ""}</div>
+        ${progressHTML}
         <div class="ip-badge ${status}">${badgeHTML}</div>
     `;
 
@@ -1296,6 +1340,11 @@ function programBuildGrid(roomNames, sessionsByRoom, isOnline) {
 function programBuild(search = "") {
 
     programContainer.innerHTML = "";
+
+    // Çok salonlu "şu an canlı" bandı — gün döngüsünden önce, sabit tek bir yerde.
+    programContainer.insertAdjacentHTML("beforeend", `
+        <div class="live-sticky" id="programLiveSticky"></div>
+    `);
 
     // Geçerli günleri (ISO tarihe çevrilebilenleri) bul, kronolojik sırala.
     const dayMap = {}; // rawDayValue -> iso
@@ -1369,6 +1418,115 @@ function programBuild(search = "") {
             programContainer.appendChild(programBuildGrid(onlineRooms, sessionsByRoom, true));
         }
     });
+
+    // İlk çizimden hemen sonra badge/sticky durumunu bir kez hesapla
+    // (60 saniyelik tam veri yenilemesini beklemeye gerek yok).
+    programRefreshBadges();
+}
+
+/*
+================================================================
+CANLI GÜNCELLEME (tam veri yenilemesi olmadan badge/sticky "tick")
+================================================================
+Bu fonksiyon veriyi tekrar Sheets'ten çekmez — sadece zaten DOM'da
+olan oturum kartlarının data-* özniteliklerini okuyup durumlarını
+(upcoming → soon → live → finished) ve ilerleme yüzdesini yeniden
+hesaplar. loadProgram() 60 saniyede bir TAM yeniden çizim yaparken,
+bu fonksiyon araya girip her ~20 saniyede bir sadece görünümü
+tazeler — böylece "3 dakika kaldı" gibi geri sayımlar akıcı kalır
+ve bir oturum canlıya geçtiği an kullanıcı 60 saniye beklemeden görür.
+*/
+
+function programRefreshBadges() {
+
+    if (!programContainer) return;
+
+    const liveSessions = [];
+
+    programContainer.querySelectorAll(".ip-session[data-start]").forEach(el => {
+
+        const session = {
+            start: el.dataset.start,
+            end: el.dataset.end,
+            room: el.dataset.room,
+            title: el.dataset.title
+        };
+        const iso = el.dataset.iso;
+
+        if (!session.start || !iso) return;
+
+        const status = programGetStatus(session, iso);
+
+        el.classList.toggle("is-live", status === "live");
+
+        const badgeEl = el.querySelector(".ip-badge");
+        if (!badgeEl) return;
+
+        badgeEl.className = `ip-badge ${status}`;
+
+        let badgeHTML = "";
+        let progressHTML = "";
+
+        if (status === "upcoming" || status === "soon") {
+            badgeHTML = `
+                <div class="badge-main">${status === "soon" ? "STARTING SOON" : "UPCOMING"}</div>
+                <div class="badge-sub">${programGetTimeLeft(session, iso)}</div>
+            `;
+        } else if (status === "live") {
+            const { pct, ending } = programGetProgress(session, iso);
+
+            badgeHTML = `
+                <div class="badge-main">LIVE NOW</div>
+                ${ending ? `<div class="badge-sub">Ending soon</div>` : ""}
+            `;
+
+            progressHTML = `
+                <div class="progress-track">
+                    <div class="progress-fill ${ending ? "ending" : ""}" style="width:${pct.toFixed(0)}%"></div>
+                </div>
+            `;
+
+            liveSessions.push({ room: session.room, title: session.title, elId: el.id });
+        } else {
+            badgeHTML = `<div class="badge-main">FINISHED</div>`;
+        }
+
+        badgeEl.innerHTML = badgeHTML;
+
+        const existingProgress = el.querySelector(".progress-track");
+        if (progressHTML && existingProgress) {
+            existingProgress.outerHTML = progressHTML;
+        } else if (progressHTML && !existingProgress) {
+            badgeEl.insertAdjacentHTML("beforebegin", progressHTML);
+        } else if (!progressHTML && existingProgress) {
+            existingProgress.remove();
+        }
+    });
+
+    programUpdateStickyBar(liveSessions);
+}
+
+// Aynı anda birden fazla salonda (yüz yüzede 4, online günlerde 3'e kadar)
+// canlı oturum olabileceği için, bandın hepsini aynı anda listelemesi gerekiyor.
+function programUpdateStickyBar(liveSessions) {
+
+    const sticky = document.getElementById("programLiveSticky");
+    if (!sticky) return;
+
+    if (liveSessions.length === 0) {
+        sticky.classList.remove("show");
+        sticky.innerHTML = "";
+        return;
+    }
+
+    sticky.classList.add("show");
+    sticky.innerHTML = liveSessions.map(s => `
+        <div class="live-sticky-chip" onclick="document.getElementById('${s.elId}')?.scrollIntoView({behavior:'smooth', block:'center'})">
+            <span class="dot"></span>
+            <span class="chip-room">${s.room}</span>
+            <span class="chip-title">${s.title}</span>
+        </div>
+    `).join("");
 }
 
 /*
@@ -1392,7 +1550,8 @@ function initProgram() {
     if (!programInitDone) {
         programInitDone = true;
         loadProgram();
-        setInterval(loadProgram, 60000);
+        setInterval(loadProgram, 60000);       // tam veri yenilemesi (Sheets'ten)
+        setInterval(programRefreshBadges, 20000); // sadece badge/sticky "tick" (veri çekmez)
     }
 
     return true;
