@@ -2783,3 +2783,124 @@
         font-size: 26px;
     }
 }
+
+/* ==========================================================================
+   ICSAT 2027 — TIMELINE / SCHEDULE MODÜLÜ
+   custom.css'in sonuna eklenecek blok.
+   Tüm kurallar #icsat-timeline altında SCOPE'lanmıştır — .event, .dot,
+   .badge gibi genel isimler kullanılsa bile sitenin geri kalanındaki
+   (Program/Committee/Speakers) class'larla ÇAKIŞMAZ, çünkü hepsi
+   #icsat-timeline parent selector'ü altında.
+   Marka rengi: #30206f
+   ========================================================================== */
+
+#icsat-timeline {
+    --tl-accent: #30206f;
+    --tl-muted: #64748b;
+    --tl-success: #10b981;
+    --tl-online: #3b82f6;
+    --tl-release: #7c3aed;
+    --tl-border: #e5eaf3;
+}
+
+#icsat-timeline .timeline {
+    position: relative;
+    margin-top: 20px;
+    padding-left: 28px;
+}
+
+#icsat-timeline .timeline::before {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--tl-accent), var(--tl-release));
+}
+
+#icsat-timeline .event {
+    position: relative;
+    padding: 16px 0 16px 24px;
+}
+
+#icsat-timeline .event:not(:last-child) {
+    border-bottom: 1px dashed var(--tl-border);
+}
+
+#icsat-timeline .dot {
+    position: absolute;
+    left: -2px;
+    top: 24px;
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border: 3px solid var(--tl-accent);
+    border-radius: 50%;
+}
+
+#icsat-timeline .content h4 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+#icsat-timeline .content .date {
+    display: inline-block;
+    margin: 6px 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--tl-accent);
+}
+
+#icsat-timeline .content p {
+    margin: 6px 0 0;
+    font-size: 0.95rem;
+    color: var(--tl-muted);
+    line-height: 1.5;
+}
+
+/* Rozetler */
+#icsat-timeline .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    vertical-align: middle;
+}
+#icsat-timeline .badge-face {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--tl-success);
+}
+#icsat-timeline .badge-online {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--tl-online);
+}
+#icsat-timeline .badge-release {
+    background: rgba(124, 58, 237, 0.08);
+    color: #6b21a8;
+}
+
+/* Yükleniyor / hata / boş durumlar */
+#icsat-timeline .timeline-loading,
+#icsat-timeline .timeline-error,
+#icsat-timeline .timeline-empty {
+    color: var(--tl-muted);
+    font-size: 0.95rem;
+    padding: 12px 0;
+}
+#icsat-timeline .timeline-error {
+    color: #ef4444;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    #icsat-timeline .timeline {
+        padding-left: 22px;
+    }
+    #icsat-timeline .content h4 {
+        font-size: 0.98rem;
+    }
+}
