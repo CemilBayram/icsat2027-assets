@@ -2,6 +2,7 @@ console.log(
     "%c🔥 ICSAT CUSTOM.JS YENİ SÜRÜM ÇALIŞIYOR 🔥",
     "color:red;font-size:20px;font-weight:bold;"
 );
+console.log("ICSAT ASSETS — v1.0.4");
 
 /*
 ================================================================
@@ -77,14 +78,79 @@ async function icsatFetchJSON(url, retries = 3, backoffMs = 800) {
 
 /*
 ============================================================
-SPEAKERS
+SPEAKERS (Speakers / Invited Speakers / Chairs — ORTAK MODÜL)
+============================================================
+Aynı "Speakers" Google Sheet'i (Type sütunu: Keynote, Invited,
+Chair, Speaker) artık BİRDEN FAZLA sayfada, her sayfada sadece
+kendi Type'ını göstererek kullanılabiliyor. Sheet, fetch,
+retry ve kart tasarımı tamamen ortak — sadece hangi Type'ların
+hangi container'a çizileceği değişiyor. Böylece "single source
+of truth" korunuyor: yeni bir sayfa açmak için Google Sheet'e
+veya API'ye dokunmaya gerek yok, sadece aşağıdaki PAGE_CONFIGS
+listesine bir satır eklemek yeterli.
 ============================================================
 */
 
-async function loadSpeakers() {
+// Tüm olası Type'ların ortak tanımı (başlık, className, ikon vb.)
+const SPEAKER_GROUP_DEFS = {
+    Keynote: {
+        title: "Keynote Speakers",
+        className: "keynote-section",
+        star: true
+    },
+    Invited: {
+        title: "Invited Speakers",
+        className: "invited-section",
+        star: false
+    },
+    Chair: {
+        title: "Chairs",
+        className: "chair-section",
+        star: false
+    },
+    Speaker: {
+        title: "Speakers",
+        className: "speaker-section",
+        star: false
+    }
+};
+
+/*
+================================================================
+HANGİ SAYFADA HANGİ TYPE'LAR GÖSTERİLECEK
+================================================================
+Her sayfanın kendi bare container div'i var (ör: <div
+id="icsat-speakers"></div>), sayfada hangisi varsa script onu
+bulup sadece o container'a ait Type'ları çiziyor. Bir sayfada
+container yoksa o config sessizce atlanır (aynı custom.js her
+sayfada yüklü olduğu için bu şart).
+
+Bir sayfayı taşımak/eklemek istersen sadece burayı düzenle.
+================================================================
+*/
+
+const SPEAKER_PAGE_CONFIGS = [
+    {
+        // Hocalar Keynote ile Invited'ı aynı grup olarak görüyor,
+        // bu yüzden ikisi de bu sayfada — ama "★ Keynote Speakers"
+        // alt başlığı ayrım için korunuyor (SPEAKER_GROUP_DEFS'ten).
+        containerId: "icsat-invited-speakers",
+        types: ["Keynote", "Invited"],
+        emptyText: "No active invited speakers available."
+    },
+    {
+        // Chair + düz Speaker aynı sayfada. Speaker hiç
+        // eklenmezse o bölüm zaten otomatik gizli kalıyor.
+        containerId: "icsat-chairs",
+        types: ["Chair", "Speaker"],
+        emptyText: "No active chairs available."
+    }
+];
+
+async function loadSpeakerPage(pageConfig) {
 
     const container =
-        document.getElementById("icsat-speakers");
+        document.getElementById(pageConfig.containerId);
 
     if (!container) return;
 
@@ -105,7 +171,7 @@ async function loadSpeakers() {
 
         /*
         ========================================================
-        SADECE AKTİF KONUŞMACILAR
+        SADECE AKTİF + BU SAYFANIN TYPE'LARINA AİT KONUŞMACILAR
         ========================================================
         */
 
@@ -115,39 +181,18 @@ async function loadSpeakers() {
                     .toLowerCase()
                     .trim() === "true"
             )
+            .filter(speaker =>
+                pageConfig.types
+                    .map(t => t.toLowerCase())
+                    .includes(
+                        String(speaker.Type)
+                            .trim()
+                            .toLowerCase()
+                    )
+            )
             .sort((a, b) =>
                 Number(a.Order) - Number(b.Order)
             );
-
-
-        /*
-        ========================================================
-        BÖLÜMLER
-        ========================================================
-        */
-
-        const groups = [
-            {
-                type: "Keynote",
-                title: "Keynote Speakers",
-                className: "keynote-section"
-            },
-            {
-                type: "Invited",
-                title: "Invited Speakers",
-                className: "invited-section"
-            },
-            {
-                type: "Chair",
-                title: "Chairs",
-                className: "chair-section"
-            },
-            {
-                type: "Speaker",
-                title: "Speakers",
-                className: "speaker-section"
-            }
-        ];
 
 
         container.innerHTML = "";
@@ -155,18 +200,22 @@ async function loadSpeakers() {
 
         /*
         ========================================================
-        HER BÖLÜMÜ OLUŞTUR
+        HER BÖLÜMÜ OLUŞTUR (bu sayfaya ait type sırasıyla)
         ========================================================
         */
 
-        groups.forEach(group => {
+        pageConfig.types.forEach(type => {
+
+            const groupDef = SPEAKER_GROUP_DEFS[type];
+
+            if (!groupDef) return;
 
             const speakers =
                 activeSpeakers.filter(speaker =>
                     String(speaker.Type)
                         .trim()
                         .toLowerCase() ===
-                    group.type.toLowerCase()
+                    type.toLowerCase()
                 );
 
 
@@ -180,7 +229,7 @@ async function loadSpeakers() {
                 document.createElement("section");
 
             section.className =
-                `speaker-group ${group.className}`;
+                `speaker-group ${groupDef.className}`;
 
 
             /*
@@ -199,13 +248,13 @@ async function loadSpeakers() {
             heading.innerHTML = `
 
                 ${
-                    group.type === "Keynote"
+                    groupDef.star
                         ? `<span class="section-star">★</span>`
                         : ""
                 }
 
                 <h2>
-                    ${group.title}
+                    ${groupDef.title}
                 </h2>
 
                 <div class="heading-line"></div>
@@ -257,7 +306,7 @@ async function loadSpeakers() {
             container.innerHTML = `
 
                 <div class="speakers-empty">
-                    No active speakers available.
+                    ${pageConfig.emptyText}
                 </div>
 
             `;
@@ -269,7 +318,7 @@ async function loadSpeakers() {
     catch (error) {
 
         console.error(
-            "Speakers yüklenemedi:",
+            `Speakers yüklenemedi (${pageConfig.containerId}):`,
             error
         );
 
@@ -439,67 +488,85 @@ function createSpeakerCard(speaker) {
 
 /*
 ================================================================
-BAŞLAT SPEAKER (retry destekli sağlam init deseni)
+BAŞLAT SPEAKER SAYFALARI (retry destekli sağlam init deseni)
+================================================================
+Aynı retry deseni artık jenerik bir fabrika fonksiyonuyla her
+speaker sayfası (Speakers / Invited Speakers / Chairs) için ayrı
+ayrı, ama tek bir yerden kuruluyor. Her sayfada bu custom.js zaten
+yüklü olduğu için, o sayfada olmayan container'lar için init hiç
+tetiklenmeden sessizce geçilir.
 ================================================================
 */
 
-let speakersInitDone = false;
+function createSpeakerPageInit(pageConfig) {
 
-function initSpeakers() {
+    let initDone = false;
 
-    const container =
-        document.getElementById("icsat-speakers");
+    function init() {
 
-    if (!container) {
-        return false;
+        const container =
+            document.getElementById(pageConfig.containerId);
+
+        if (!container) {
+            return false;
+        }
+
+        console.log(
+            `✅ ${pageConfig.containerId} container bulundu.`
+        );
+
+        if (!initDone) {
+            initDone = true;
+            loadSpeakerPage(pageConfig);
+        }
+
+        return true;
     }
 
-    console.log("✅ Speakers container bulundu.");
-
-    if (!speakersInitDone) {
-        speakersInitDone = true;
-        loadSpeakers();
-    }
-
-    return true;
-}
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-        initSpeakers();
-    }
-);
-
-if (window.jQuery) {
-    jQuery(window).on(
-        "elementor/frontend/init",
+    document.addEventListener(
+        "DOMContentLoaded",
         function () {
-            console.log("✅ Elementor frontend hazır (speakers).");
-            setTimeout(initSpeakers, 300);
-            setTimeout(initSpeakers, 1000);
-            setTimeout(initSpeakers, 2000);
+            init();
         }
     );
+
+    if (window.jQuery) {
+        jQuery(window).on(
+            "elementor/frontend/init",
+            function () {
+                console.log(
+                    `✅ Elementor frontend hazır (${pageConfig.containerId}).`
+                );
+                setTimeout(init, 300);
+                setTimeout(init, 1000);
+                setTimeout(init, 2000);
+            }
+        );
+    }
+
+    let tryCount = 0;
+
+    const tryInterval =
+        setInterval(function () {
+
+            tryCount++;
+
+            if (init()) {
+                clearInterval(tryInterval);
+            }
+
+            if (tryCount >= 20) {
+                clearInterval(tryInterval);
+                console.log(
+                    `⚠️ ${pageConfig.containerId} container 20 denemede bulunamadı.`
+                );
+            }
+
+        }, 500);
+
 }
 
-let speakersTryCount = 0;
-
-const speakersTryInterval =
-    setInterval(function () {
-
-        speakersTryCount++;
-
-        if (initSpeakers()) {
-            clearInterval(speakersTryInterval);
-        }
-
-        if (speakersTryCount >= 20) {
-            clearInterval(speakersTryInterval);
-            console.log("⚠️ Speakers container 20 denemede bulunamadı.");
-        }
-
-    }, 500);
+SPEAKER_PAGE_CONFIGS.forEach(createSpeakerPageInit);
 
 
 /*
@@ -1718,3 +1785,182 @@ const socialTryInterval = setInterval(function () {
 
   document.addEventListener("DOMContentLoaded", icsatRenderMenu);
 })();
+
+/*
+================================================================
+ICSAT 2027 — CONGRESS TIMELINE (Anasayfa Takvim/Schedule Bölümü)
+custom.js'in EN SONUNA (Menu modülünden sonra) eklenecek blok.
+Mevcut ICSAT_SHEETS_API_URL ve icsatFetchJSON zaten yukarıda
+tanımlı olduğu için burada tekrar tanımlanmıyor.
+
+Container: <div id="icsat-timeline"></div>
+
+Google Sheet "Timeline" sekmesindeki beklenen sütunlar:
+  Order       -> 1, 2, 3... (sıralama; boşsa satır sırası kullanılır)
+  Title       -> "Last abstract or full-text submission date"
+  Date        -> "April 30, 2026"  (SERBEST METİN — bu sütunu Sheets'te
+                  mutlaka Plain Text yapın; "5.May" gibi otomatik Date
+                  objesine çevrilmesin diye)
+  BadgeType   -> "face" | "online" | "release" | "" (boş bırakılabilir)
+  BadgeText   -> "Hybrid", "Abstract Book" gibi rozet metni (opsiyonel)
+  Description -> Açıklama metni
+================================================================
+*/
+
+let timelineContainer = document.getElementById("icsat-timeline");
+
+const TIMELINE_API_URL =
+    `${ICSAT_SHEETS_API_URL}?sheet=Timeline`;
+
+let timelineData = [];
+let timelineLoadedOnce = false;
+
+async function loadTimeline() {
+
+    if (!timelineContainer) return;
+
+    if (!timelineLoadedOnce) {
+        timelineContainer.innerHTML = `
+            <div class="timeline-loading">Loading schedule…</div>
+        `;
+    }
+
+    try {
+
+        timelineData = await icsatFetchJSON(TIMELINE_API_URL);
+
+        if (!Array.isArray(timelineData)) {
+            throw new Error("Timeline API bir liste döndürmedi.");
+        }
+
+        timelineLoadedOnce = true;
+
+        timelineBuild();
+
+    } catch (err) {
+
+        console.error("Timeline yüklenemedi:", err);
+
+        timelineContainer.innerHTML = `
+            <div class="timeline-error">
+                <strong>Schedule could not be loaded.</strong>
+                <br><br>
+                ${err.message}
+            </div>
+        `;
+    }
+}
+
+/* ================= BADGE CLASS ================= */
+
+function timelineBadgeClass(type) {
+    const t = String(type || "").trim().toLowerCase();
+    if (["face", "online", "release"].indexOf(t) === -1) return "";
+    return `badge-${t}`;
+}
+
+/* ================= KART OLUŞTUR ================= */
+
+function timelineCreateEvent(row) {
+
+    const badgeCls = timelineBadgeClass(row.BadgeType);
+    const badgeHtml = (badgeCls && row.BadgeText)
+        ? `<span class="badge ${badgeCls}">${row.BadgeText}</span>`
+        : "";
+
+    return `
+        <div class="event">
+            <span class="dot"></span>
+            <div class="content">
+                <h4>${row.Title || ""}</h4>
+                <span class="date">${row.Date || ""} ${badgeHtml}</span>
+                ${row.Description ? `<p>${row.Description}</p>` : ""}
+            </div>
+        </div>
+    `;
+}
+
+/* ================= BUILD ================= */
+
+function timelineBuild() {
+
+    if (!Array.isArray(timelineData) || timelineData.length === 0) {
+        timelineContainer.innerHTML = `
+            <div class="timeline-empty">No schedule information available yet.</div>
+        `;
+        return;
+    }
+
+    // Aynı satırın birebir tekrarını ele (dedup) — diğer modüllerle aynı desen
+    const seenRows = new Set();
+    const rows = timelineData.filter(row => {
+        const key = JSON.stringify(row);
+        if (seenRows.has(key)) return false;
+        seenRows.add(key);
+        return true;
+    });
+
+    // Order sütununa göre sırala; boşsa sheet'teki satır sırası korunur
+    rows.sort((a, b) => (Number(a.Order) || 0) - (Number(b.Order) || 0));
+
+    const html = rows.map(timelineCreateEvent).join("");
+
+    timelineContainer.innerHTML = `<div class="timeline">${html}</div>`;
+}
+
+/*
+================================================================
+BAŞLAT TIMELINE (retry destekli sağlam init deseni —
+Program/SocialProgram modüllerinizle birebir aynı yapı)
+================================================================
+*/
+
+let timelineInitDone = false;
+
+function initTimeline() {
+
+    timelineContainer = document.getElementById("icsat-timeline");
+
+    if (!timelineContainer) {
+        return false;
+    }
+
+    console.log("✅ Timeline container bulundu.");
+
+    if (!timelineInitDone) {
+        timelineInitDone = true;
+        loadTimeline();
+    }
+
+    return true;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    initTimeline();
+});
+
+if (window.jQuery) {
+    jQuery(window).on("elementor/frontend/init", function () {
+        console.log("✅ Elementor frontend hazır (timeline).");
+        setTimeout(initTimeline, 300);
+        setTimeout(initTimeline, 1000);
+        setTimeout(initTimeline, 2000);
+    });
+}
+
+let timelineTryCount = 0;
+
+const timelineTryInterval = setInterval(function () {
+
+    timelineTryCount++;
+
+    if (initTimeline()) {
+        clearInterval(timelineTryInterval);
+    }
+
+    if (timelineTryCount >= 20) {
+        clearInterval(timelineTryInterval);
+        console.log("⚠️ Timeline container 20 denemede bulunamadı.");
+    }
+
+}, 500);
