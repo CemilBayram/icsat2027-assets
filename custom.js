@@ -1785,3 +1785,182 @@ const socialTryInterval = setInterval(function () {
 
   document.addEventListener("DOMContentLoaded", icsatRenderMenu);
 })();
+
+/*
+================================================================
+ICSAT 2027 — CONGRESS TIMELINE (Anasayfa Takvim/Schedule Bölümü)
+custom.js'in EN SONUNA (Menu modülünden sonra) eklenecek blok.
+Mevcut ICSAT_SHEETS_API_URL ve icsatFetchJSON zaten yukarıda
+tanımlı olduğu için burada tekrar tanımlanmıyor.
+
+Container: <div id="icsat-timeline"></div>
+
+Google Sheet "Timeline" sekmesindeki beklenen sütunlar:
+  Order       -> 1, 2, 3... (sıralama; boşsa satır sırası kullanılır)
+  Title       -> "Last abstract or full-text submission date"
+  Date        -> "April 30, 2026"  (SERBEST METİN — bu sütunu Sheets'te
+                  mutlaka Plain Text yapın; "5.May" gibi otomatik Date
+                  objesine çevrilmesin diye)
+  BadgeType   -> "face" | "online" | "release" | "" (boş bırakılabilir)
+  BadgeText   -> "Hybrid", "Abstract Book" gibi rozet metni (opsiyonel)
+  Description -> Açıklama metni
+================================================================
+*/
+
+let timelineContainer = document.getElementById("icsat-timeline");
+
+const TIMELINE_API_URL =
+    `${ICSAT_SHEETS_API_URL}?sheet=Timeline`;
+
+let timelineData = [];
+let timelineLoadedOnce = false;
+
+async function loadTimeline() {
+
+    if (!timelineContainer) return;
+
+    if (!timelineLoadedOnce) {
+        timelineContainer.innerHTML = `
+            <div class="timeline-loading">Loading schedule…</div>
+        `;
+    }
+
+    try {
+
+        timelineData = await icsatFetchJSON(TIMELINE_API_URL);
+
+        if (!Array.isArray(timelineData)) {
+            throw new Error("Timeline API bir liste döndürmedi.");
+        }
+
+        timelineLoadedOnce = true;
+
+        timelineBuild();
+
+    } catch (err) {
+
+        console.error("Timeline yüklenemedi:", err);
+
+        timelineContainer.innerHTML = `
+            <div class="timeline-error">
+                <strong>Schedule could not be loaded.</strong>
+                <br><br>
+                ${err.message}
+            </div>
+        `;
+    }
+}
+
+/* ================= BADGE CLASS ================= */
+
+function timelineBadgeClass(type) {
+    const t = String(type || "").trim().toLowerCase();
+    if (["face", "online", "release"].indexOf(t) === -1) return "";
+    return `badge-${t}`;
+}
+
+/* ================= KART OLUŞTUR ================= */
+
+function timelineCreateEvent(row) {
+
+    const badgeCls = timelineBadgeClass(row.BadgeType);
+    const badgeHtml = (badgeCls && row.BadgeText)
+        ? `<span class="badge ${badgeCls}">${row.BadgeText}</span>`
+        : "";
+
+    return `
+        <div class="event">
+            <span class="dot"></span>
+            <div class="content">
+                <h4>${row.Title || ""}</h4>
+                <span class="date">${row.Date || ""} ${badgeHtml}</span>
+                ${row.Description ? `<p>${row.Description}</p>` : ""}
+            </div>
+        </div>
+    `;
+}
+
+/* ================= BUILD ================= */
+
+function timelineBuild() {
+
+    if (!Array.isArray(timelineData) || timelineData.length === 0) {
+        timelineContainer.innerHTML = `
+            <div class="timeline-empty">No schedule information available yet.</div>
+        `;
+        return;
+    }
+
+    // Aynı satırın birebir tekrarını ele (dedup) — diğer modüllerle aynı desen
+    const seenRows = new Set();
+    const rows = timelineData.filter(row => {
+        const key = JSON.stringify(row);
+        if (seenRows.has(key)) return false;
+        seenRows.add(key);
+        return true;
+    });
+
+    // Order sütununa göre sırala; boşsa sheet'teki satır sırası korunur
+    rows.sort((a, b) => (Number(a.Order) || 0) - (Number(b.Order) || 0));
+
+    const html = rows.map(timelineCreateEvent).join("");
+
+    timelineContainer.innerHTML = `<div class="timeline">${html}</div>`;
+}
+
+/*
+================================================================
+BAŞLAT TIMELINE (retry destekli sağlam init deseni —
+Program/SocialProgram modüllerinizle birebir aynı yapı)
+================================================================
+*/
+
+let timelineInitDone = false;
+
+function initTimeline() {
+
+    timelineContainer = document.getElementById("icsat-timeline");
+
+    if (!timelineContainer) {
+        return false;
+    }
+
+    console.log("✅ Timeline container bulundu.");
+
+    if (!timelineInitDone) {
+        timelineInitDone = true;
+        loadTimeline();
+    }
+
+    return true;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    initTimeline();
+});
+
+if (window.jQuery) {
+    jQuery(window).on("elementor/frontend/init", function () {
+        console.log("✅ Elementor frontend hazır (timeline).");
+        setTimeout(initTimeline, 300);
+        setTimeout(initTimeline, 1000);
+        setTimeout(initTimeline, 2000);
+    });
+}
+
+let timelineTryCount = 0;
+
+const timelineTryInterval = setInterval(function () {
+
+    timelineTryCount++;
+
+    if (initTimeline()) {
+        clearInterval(timelineTryInterval);
+    }
+
+    if (timelineTryCount >= 20) {
+        clearInterval(timelineTryInterval);
+        console.log("⚠️ Timeline container 20 denemede bulunamadı.");
+    }
+
+}, 500);
