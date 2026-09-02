@@ -1,6 +1,6 @@
 /* =========================================================
    ICSAT 2027 — SPEAKERS
-   FINAL CLEAN CSS - V1.0.7
+   FINAL CLEAN CSS - V1.0.8
    ========================================================= */
 
 
@@ -3063,5 +3063,240 @@
     #icsat-timeline .tl-logo {
         width: 44px;
         height: 44px;
+    }
+}
+
+/* ==========================================================================
+   ICSAT 2027 — REGISTRATION FEES & BANK INFORMATION MODÜLÜ
+   custom.css'in sonuna eklenecek blok.
+   Tüm kurallar #icsat-registration altında SCOPE'lanmıştır — .reg-card,
+   .reg-table gibi genel isimler kullanılsa bile sitenin geri kalanındaki
+   (Program/Committee/Speakers/Timeline/Social) class'larla ÇAKIŞMAZ,
+   çünkü hepsi #icsat-registration parent selector'ü altında.
+
+   #accommodation-section (sayfadaki statik Accommodation Information
+   bloğu) bu dosyadan tamamen bağımsızdır, kendi ID'siyle izole çalışır,
+   burada hiçbir şeye dokunulmamıştır.
+
+   Marka rengi: #30206f
+   ========================================================================== */
+
+#icsat-registration {
+    --reg-accent: #30206f;
+    --reg-accent-2: #5f7cff;
+    --reg-muted: #64748b;
+    --reg-border: #e5eaf3;
+    --reg-danger: #ef4444;
+}
+
+#icsat-registration .reg-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+#icsat-registration .reg-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 10px 28px rgba(23, 30, 56, 0.08);
+}
+
+#icsat-registration .reg-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+#icsat-registration .reg-logo {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--reg-accent), var(--reg-accent-2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+#icsat-registration .reg-title {
+    font-size: 1.7rem;
+    margin: 0;
+    color: #0f172a;
+}
+
+#icsat-registration .reg-lead {
+    margin: 6px 0 0;
+    color: var(--reg-muted);
+    font-size: 1rem;
+}
+
+/* ---- Fee table ---- */
+
+#icsat-registration .reg-table-scroll {
+    overflow-x: auto;
+}
+
+#icsat-registration .reg-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+    color: #374151;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+#icsat-registration .reg-head-main {
+    background: #eef2f7;
+}
+
+#icsat-registration .reg-head-sub {
+    background: #f8fafc;
+}
+
+#icsat-registration .reg-table th {
+    padding: 16px;
+    text-align: center;
+}
+
+#icsat-registration .reg-head-main th:first-child {
+    padding: 20px 16px;
+    text-align: left;
+}
+
+#icsat-registration .reg-subnote {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 400;
+    margin-top: 2px;
+}
+
+#icsat-registration .reg-table tbody tr {
+    border-bottom: 1px solid var(--reg-border);
+}
+
+#icsat-registration .reg-table tbody tr:nth-child(odd) {
+    background: #fdfefe;
+}
+
+#icsat-registration .reg-table tbody tr:nth-child(even) {
+    background: #f8fafc;
+}
+
+#icsat-registration .reg-table td {
+    padding: 14px;
+    text-align: center;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+#icsat-registration .reg-table td.reg-type {
+    text-align: left;
+}
+
+#icsat-registration .reg-type-note {
+    display: block;
+    font-weight: 400;
+    font-size: 12.5px;
+    color: var(--reg-muted);
+    margin-top: 2px;
+}
+
+/* ---- Footnote ---- */
+
+#icsat-registration .reg-footnote {
+    margin-top: 16px;
+    font-size: 14.5px;
+    color: var(--reg-muted);
+}
+
+#icsat-registration .reg-footnote p {
+    margin: 0 0 6px;
+}
+
+/* ---- Bank card ---- */
+
+#icsat-registration .reg-bank-title {
+    font-size: 1.5rem;
+}
+
+#icsat-registration .reg-hr {
+    margin: 10px 0 16px;
+    border: none;
+    border-top: 3px solid var(--reg-border);
+}
+
+#icsat-registration .reg-bank-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+    color: #374151;
+}
+
+#icsat-registration .reg-bank-table td {
+    padding: 8px 0;
+}
+
+#icsat-registration .reg-bank-table td.reg-bank-label {
+    font-weight: 600;
+    width: 220px;
+    color: #0f172a;
+}
+
+#icsat-registration .reg-note {
+    margin-top: 18px;
+    padding: 18px;
+    background: #eef2ff;
+    border-left: 5px solid var(--reg-accent);
+    border-radius: 14px;
+}
+
+#icsat-registration .reg-note p {
+    margin: 0;
+    font-size: 14.5px;
+    color: #1e293b;
+    line-height: 1.6;
+}
+
+/* ---- Yükleniyor / hata / boş durumlar ---- */
+
+#icsat-registration .reg-loading,
+#icsat-registration .reg-error,
+#icsat-registration .reg-empty {
+    color: var(--reg-muted);
+    font-size: 0.95rem;
+    padding: 20px 4px;
+}
+
+#icsat-registration .reg-error {
+    color: var(--reg-danger);
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 640px) {
+    #icsat-registration .reg-title {
+        font-size: 1.4rem;
+    }
+    #icsat-registration .reg-bank-title {
+        font-size: 1.25rem;
+    }
+    #icsat-registration .reg-table {
+        font-size: 13px;
+    }
+    #icsat-registration .reg-bank-table td.reg-bank-label {
+        width: auto;
+        display: block;
+    }
+    #icsat-registration .reg-logo {
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
     }
 }
