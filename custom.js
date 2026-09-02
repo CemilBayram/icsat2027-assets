@@ -2,7 +2,7 @@ console.log(
     "%c🔥 ICSAT CUSTOM.JS YENİ SÜRÜM ÇALIŞIYOR 🔥",
     "color:red;font-size:20px;font-weight:bold;"
 );
-console.log("ICSAT ASSETS — v1.0.7");
+console.log("ICSAT ASSETS — v1.0.8");
 
 /*
 ================================================================
@@ -2141,6 +2141,318 @@ const timelineTryInterval = setInterval(function () {
     if (timelineTryCount >= 20) {
         clearInterval(timelineTryInterval);
         console.log("⚠️ Timeline container 20 denemede bulunamadı.");
+    }
+
+}, 500);
+
+/*
+================================================================
+ICSAT 2027 — REGISTRATION FEES & BANK INFORMATION MODÜLÜ
+custom.js'in EN SONUNA (Timeline modülünden sonra) eklenecek blok.
+Mevcut ICSAT_SHEETS_API_URL ve icsatFetchJSON zaten yukarıda
+tanımlı olduğu için burada tekrar tanımlanmıyor.
+
+Container: <div id="icsat-registration"></div>
+
+Google Sheet "Registration" sekmesindeki beklenen sütunlar
+(Section sütunu satırın ne olduğunu belirler):
+
+  Section  -> "Meta" | "Fee" | "Bank"
+  Order    -> sadece Fee satırlarında sıralama için (1, 2, 3...)
+  Key      -> satırın anahtarı (aşağıda listelenmiştir)
+  Label    -> Fee/Bank satırlarında ana metin; Meta satırlarında değerin kendisi
+  Note     -> sadece Fee satırlarında opsiyonel alt not (örn. "(Undergraduate / MSc / PhD)")
+  Early    -> sadece Fee satırlarında, Single boşsa: "₺4.000 / ₺3.000" gibi
+  Late     -> sadece Fee satırlarında, Single boşsa: "₺5.000 / ₺4.000" gibi
+  Single   -> sadece Fee satırlarında doluysa, Early/Late birleşip (colspan)
+              tek fiyat olarak gösterilir (örn. Student, Accompanying Person)
+
+  Section=Meta beklenen Key'ler:
+    EarlyDateLabel -> "Before 15 April 2027"
+    LateDateLabel  -> "After 15 April 2027"
+    Footnote1, Footnote2, ... -> madde madde alt notlar
+    ReceiptNote    -> ödeme sonrası dekont notu
+
+  Section=Bank beklenen Key'ler:
+    Bank, BankBranch, AccountHolder, SwiftCode, IBAN
+
+Not: Accommodation Information bölümü (#accommodation-section)
+bu modülden tamamen bağımsızdır ve hiç değiştirilmemiştir —
+kendi statik HTML/CSS'iyle sayfada aynen kalır.
+================================================================
+*/
+
+let registrationContainer = document.getElementById("icsat-registration");
+
+const REGISTRATION_API_URL =
+    `${ICSAT_SHEETS_API_URL}?sheet=Registration`;
+
+let registrationData = [];
+let registrationLoadedOnce = false;
+
+async function loadRegistration() {
+
+    // Bu sayfada #icsat-registration yoksa hiç çalışma.
+    if (!registrationContainer) return;
+
+    if (!registrationLoadedOnce) {
+        registrationContainer.innerHTML = `
+            <div class="reg-loading">Loading registration information…</div>
+        `;
+    }
+
+    try {
+
+        registrationData = await icsatFetchJSON(REGISTRATION_API_URL);
+
+        if (!Array.isArray(registrationData)) {
+            throw new Error("Registration API bir liste döndürmedi.");
+        }
+
+        registrationLoadedOnce = true;
+
+        registrationBuild();
+
+    } catch (err) {
+
+        console.error("Registration bilgisi yüklenemedi:", err);
+
+        registrationContainer.innerHTML = `
+            <div class="reg-error">
+                <strong>Registration information could not be loaded.</strong>
+                <br><br>
+                ${err.message}
+            </div>
+        `;
+    }
+}
+
+/* ================= YARDIMCI: META HARİTASI ================= */
+
+function registrationMetaMap(rows) {
+    const map = {};
+    rows.forEach(row => {
+        if (row.Key) map[row.Key] = row.Label || "";
+    });
+    return map;
+}
+
+/* ================= FEE SATIRI OLUŞTUR ================= */
+
+function registrationCreateFeeRow(fee) {
+
+    const typeCell = `
+        <td class="reg-type">
+            ${fee.Label || ""}
+            ${fee.Note ? `<span class="reg-type-note">${fee.Note}</span>` : ""}
+        </td>
+    `;
+
+    if (fee.Single) {
+        return `
+            <tr>
+                ${typeCell}
+                <td colspan="2">${fee.Single}</td>
+            </tr>
+        `;
+    }
+
+    return `
+        <tr>
+            ${typeCell}
+            <td>${fee.Early || ""}</td>
+            <td>${fee.Late || ""}</td>
+        </tr>
+    `;
+}
+
+/* ================= BANK SATIRI OLUŞTUR ================= */
+
+function registrationCreateBankRow(bank) {
+
+    const labels = {
+        Bank: "Bank",
+        BankBranch: "Bank Branch",
+        AccountHolder: "Account Holder",
+        SwiftCode: "SWIFT Code",
+        IBAN: "IBAN"
+    };
+
+    const label = labels[bank.Key] || bank.Key;
+
+    return `
+        <tr>
+            <td class="reg-bank-label">${label}</td>
+            <td>${bank.Label || ""}</td>
+        </tr>
+    `;
+}
+
+/* ================= BUILD ================= */
+
+function registrationBuild() {
+
+    // Aynı satırın tekrarını (yanlışlıkla iki kez girilmiş vs.) ele
+    const seenRows = new Set();
+    const rows = registrationData.filter(row => {
+        const key = JSON.stringify(row);
+        if (seenRows.has(key)) return false;
+        seenRows.add(key);
+        return true;
+    });
+
+    const metaRows = rows.filter(r => r.Section === "Meta");
+    const bankRows = rows.filter(r => r.Section === "Bank");
+
+    const feeRows = rows
+        .filter(r => r.Section === "Fee")
+        .sort((a, b) => (Number(a.Order) || 0) - (Number(b.Order) || 0));
+
+    const meta = registrationMetaMap(metaRows);
+
+    if (feeRows.length === 0 && bankRows.length === 0) {
+        registrationContainer.innerHTML = `
+            <div class="reg-wrap">
+                <div class="reg-card">
+                    <div class="reg-empty">No registration information available yet.</div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    const feesHtml = feeRows.map(registrationCreateFeeRow).join("");
+    const bankHtml = bankRows.map(registrationCreateBankRow).join("");
+
+    const footnoteLines = Object.keys(meta)
+        .filter(k => /^Footnote\d*$/.test(k))
+        .sort()
+        .map(k => meta[k])
+        .filter(Boolean);
+
+    const footnoteHtml = footnoteLines.length
+        ? `
+            <div class="reg-footnote">
+                ${footnoteLines.map(line => `<p>&bull; ${line}</p>`).join("")}
+            </div>
+        `
+        : "";
+
+    const noteHtml = meta.ReceiptNote
+        ? `
+            <div class="reg-note">
+                <p>${meta.ReceiptNote}</p>
+            </div>
+        `
+        : "";
+
+    registrationContainer.innerHTML = `
+        <div class="reg-wrap">
+
+            <div class="reg-card">
+                <header class="reg-header">
+                    <div class="reg-logo">₺</div>
+                    <div>
+                        <h2 class="reg-title">Registration Fees</h2>
+                        <p class="reg-lead">Please review the fees below and complete your registration before the deadline.</p>
+                    </div>
+                </header>
+
+                <div class="reg-table-scroll">
+                    <table class="reg-table">
+                        <thead>
+                            <tr class="reg-head-main">
+                                <th>Registration Type</th>
+                                <th>
+                                    Early Registration
+                                    <span class="reg-subnote">(${meta.EarlyDateLabel || ""})</span>
+                                </th>
+                                <th>
+                                    Late Registration
+                                    <span class="reg-subnote">(${meta.LateDateLabel || ""})</span>
+                                </th>
+                            </tr>
+                            <tr class="reg-head-sub">
+                                <th></th>
+                                <th>Face-to-Face / Online</th>
+                                <th>Face-to-Face / Online</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${feesHtml}
+                        </tbody>
+                    </table>
+                </div>
+
+                ${footnoteHtml}
+            </div>
+
+            <div class="reg-card reg-bank-card">
+                <h2 class="reg-title reg-bank-title">Bank Information</h2>
+                <hr class="reg-hr">
+                <table class="reg-bank-table">
+                    ${bankHtml}
+                </table>
+                ${noteHtml}
+            </div>
+
+        </div>
+    `;
+}
+
+/*
+================================================================
+BAŞLAT REGISTRATION (retry destekli sağlam init deseni —
+Timeline/Program/SocialProgram modülleriyle birebir aynı yapı)
+================================================================
+*/
+
+let registrationInitDone = false;
+
+function initRegistration() {
+
+    registrationContainer = document.getElementById("icsat-registration");
+
+    if (!registrationContainer) {
+        return false;
+    }
+
+    console.log("✅ Registration container bulundu.");
+
+    if (!registrationInitDone) {
+        registrationInitDone = true;
+        loadRegistration();
+    }
+
+    return true;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    initRegistration();
+});
+
+if (window.jQuery) {
+    jQuery(window).on("elementor/frontend/init", function () {
+        console.log("✅ Elementor frontend hazır (registration).");
+        setTimeout(initRegistration, 300);
+        setTimeout(initRegistration, 1000);
+        setTimeout(initRegistration, 2000);
+    });
+}
+
+let registrationTryCount = 0;
+
+const registrationTryInterval = setInterval(function () {
+
+    registrationTryCount++;
+
+    if (initRegistration()) {
+        clearInterval(registrationTryInterval);
+    }
+
+    if (registrationTryCount >= 20) {
+        clearInterval(registrationTryInterval);
+        console.log("⚠️ Registration container 20 denemede bulunamadı.");
     }
 
 }, 500);
