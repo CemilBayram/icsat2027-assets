@@ -1,6 +1,6 @@
 /* =========================================================
    ICSAT 2027 — SPEAKERS
-   FINAL CLEAN CSS - V1.0.9
+   FINAL CLEAN CSS - V1.0.10
    ========================================================= */
 
 
@@ -3304,5 +3304,323 @@
         width: 44px;
         height: 44px;
         font-size: 1.2rem;
+    }
+}
+
+/* ==========================================================================
+   ICSAT 2027 — DOWNLOADABLE DOCUMENTS MODÜLÜ (v1.0.10)
+   custom.css'in sonuna eklenecek blok.
+   Tüm kurallar #icsat-documents altında SCOPE'lanmıştır.
+   Marka rengi: #30206f
+   ========================================================================== */
+
+#icsat-documents {
+    --doc-accent: #30206f;
+    --doc-accent-2: #5f7cff;
+    --doc-muted: #64748b;
+    --doc-border: #e5eaf3;
+    --doc-danger: #ef4444;
+}
+
+#icsat-documents .doc-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+#icsat-documents .doc-group-title {
+    font-size: 1.4rem;
+    margin: 0 0 16px;
+    color: #0f172a;
+    border-left: 5px solid var(--doc-accent);
+    padding-left: 12px;
+}
+
+#icsat-documents .doc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+#icsat-documents .doc-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: 0 8px 22px rgba(23, 30, 56, 0.07);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+#icsat-documents .doc-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 30px rgba(23, 30, 56, 0.14);
+}
+
+#icsat-documents .doc-icon {
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--doc-accent), var(--doc-accent-2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+
+#icsat-documents .doc-info {
+    flex: 1;
+    min-width: 0;
+}
+
+#icsat-documents .doc-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #0f172a;
+    margin-bottom: 3px;
+}
+
+#icsat-documents .doc-desc {
+    font-size: 0.85rem;
+    color: var(--doc-muted);
+    line-height: 1.4;
+}
+
+#icsat-documents .doc-download {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #eef2ff;
+    color: var(--doc-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+#icsat-documents .doc-loading,
+#icsat-documents .doc-error,
+#icsat-documents .doc-empty {
+    color: var(--doc-muted);
+    font-size: 0.95rem;
+    padding: 20px 4px;
+    text-align: center;
+}
+
+#icsat-documents .doc-error {
+    color: var(--doc-danger);
+}
+
+@media (max-width: 640px) {
+    #icsat-documents .doc-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================================
+   ICSAT 2027 — CONGRESS PHOTOS MODÜLÜ (v1.0.10)
+   custom.css'in sonuna eklenecek blok.
+   Tüm kurallar #icsat-photos altında SCOPE'lanmıştır (lightbox dahil —
+   lightbox JS tarafından #icsat-photos'un içine, aynı innerHTML atamasıyla
+   ekleniyor, position:fixed olduğu için yine de tam ekran kaplar).
+   Marka rengi: #30206f
+   ========================================================================== */
+
+#icsat-photos {
+    --photo-accent: #30206f;
+    --photo-accent-2: #5f7cff;
+    --photo-muted: #64748b;
+}
+
+#icsat-photos .photo-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+#icsat-photos .photo-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+}
+
+#icsat-photos .photo-tab {
+    border: 2px solid var(--photo-accent);
+    background: transparent;
+    color: var(--photo-accent);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 9px 22px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+#icsat-photos .photo-tab:hover {
+    background: #eef2ff;
+}
+
+#icsat-photos .photo-tab-active {
+    background: linear-gradient(135deg, var(--photo-accent), var(--photo-accent-2));
+    color: #ffffff;
+    border-color: transparent;
+}
+
+#icsat-photos .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 16px;
+}
+
+#icsat-photos .photo-item {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    aspect-ratio: 4 / 3;
+    box-shadow: 0 8px 22px rgba(23, 30, 56, 0.1);
+    transition: transform 0.18s ease;
+}
+
+#icsat-photos .photo-item:hover {
+    transform: translateY(-3px);
+}
+
+#icsat-photos .photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+#icsat-photos .photo-caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 8px 10px;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.75), transparent);
+    color: #ffffff;
+    font-size: 0.8rem;
+    line-height: 1.3;
+}
+
+#icsat-photos .photo-loading,
+#icsat-photos .photo-error,
+#icsat-photos .photo-empty {
+    color: var(--photo-muted);
+    font-size: 0.95rem;
+    padding: 20px 4px;
+    text-align: center;
+}
+
+#icsat-photos .photo-error {
+    color: #ef4444;
+}
+
+/* ---- Lightbox (tam ekran overlay) ---- */
+
+#icsat-photos .photo-lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 12, 20, 0.92);
+    z-index: 999999;
+    align-items: center;
+    justify-content: center;
+}
+
+#icsat-photos .photo-lightbox.photo-lb-open {
+    display: flex;
+}
+
+#icsat-photos .photo-lb-img {
+    max-width: 88vw;
+    max-height: 82vh;
+    border-radius: 10px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+#icsat-photos .photo-lb-caption {
+    position: absolute;
+    bottom: 26px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: #ffffff;
+    font-size: 0.95rem;
+    padding: 0 20px;
+}
+
+#icsat-photos .photo-lb-close,
+#icsat-photos .photo-lb-prev,
+#icsat-photos .photo-lb-next {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.12);
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.18s ease;
+}
+
+#icsat-photos .photo-lb-close:hover,
+#icsat-photos .photo-lb-prev:hover,
+#icsat-photos .photo-lb-next:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+#icsat-photos .photo-lb-close {
+    top: 22px;
+    right: 22px;
+    width: 42px;
+    height: 42px;
+    font-size: 1.2rem;
+}
+
+#icsat-photos .photo-lb-prev,
+#icsat-photos .photo-lb-next {
+    top: 50%;
+    transform: translateY(-50%);
+    width: 52px;
+    height: 52px;
+    font-size: 1.8rem;
+}
+
+#icsat-photos .photo-lb-prev {
+    left: 22px;
+}
+
+#icsat-photos .photo-lb-next {
+    right: 22px;
+}
+
+@media (max-width: 640px) {
+    #icsat-photos .photo-tab {
+        padding: 8px 16px;
+        font-size: 0.82rem;
+    }
+    #icsat-photos .photo-lb-prev,
+    #icsat-photos .photo-lb-next {
+        width: 42px;
+        height: 42px;
+        font-size: 1.4rem;
+    }
+    #icsat-photos .photo-lb-prev {
+        left: 8px;
+    }
+    #icsat-photos .photo-lb-next {
+        right: 8px;
     }
 }
