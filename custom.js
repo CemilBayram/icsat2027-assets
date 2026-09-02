@@ -2,14 +2,14 @@ console.log(
     "%c🔥 ICSAT CUSTOM.JS YENİ SÜRÜM ÇALIŞIYOR 🔥",
     "color:red;font-size:20px;font-weight:bold;"
 );
-console.log("ICSAT ASSETS — v1.0.9");
+console.log("ICSAT ASSETS — v1.0.10");
 
 /*
 ================================================================
 GÜNCEL APPS SCRIPT WEB APP DEPLOYMENT'I
-Google Sheets'teki 6 sayfa (Program, Speakers, Committee,
-Sponsors, Registration, Announcements) tek bir Web App'ten
-?sheet=SAYFA_ADI parametresiyle okunuyor.
+Google Sheets'teki 8 sayfa (Program, Speakers, Committee,
+Sponsors, Registration, Announcements, Documents, Photos) tek
+bir Web App'ten ?sheet=SAYFA_ADI parametresiyle okunuyor.
 ================================================================
 */
 
@@ -2468,6 +2468,538 @@ const registrationTryInterval = setInterval(function () {
     if (registrationTryCount >= 20) {
         clearInterval(registrationTryInterval);
         console.log("⚠️ Registration container 20 denemede bulunamadı.");
+    }
+
+}, 500);
+
+/*
+================================================================
+ICSAT 2027 — DOWNLOADABLE DOCUMENTS MODÜLÜ (v1.0.10)
+
+Google Sheet "Documents" sekmesi beklenen sütunlar:
+  Category      -> "Templates", "Guidelines", "Forms" gibi grup adı
+  CategoryOrder -> (opsiyonel) kategorilerin sıralanması için sayı, boşsa 0
+  Title         -> belgenin görünen adı
+  Description   -> (opsiyonel) kısa açıklama
+  FileURL       -> Google Drive / doğrudan dosya linki
+  Order         -> (opsiyonel) aynı kategori içindeki sıralama, boşsa 0
+
+Dosya ikonu FileURL'in uzantısından otomatik belirlenir
+(pdf, doc/docx, xls/xlsx, ppt/pptx, zip/rar — diğerleri için genel ikon).
+================================================================
+*/
+
+let documentsContainer = document.getElementById("icsat-documents");
+
+const DOCUMENTS_API_URL =
+    `${ICSAT_SHEETS_API_URL}?sheet=Documents`;
+
+let documentsData = [];
+let documentsLoadedOnce = false;
+
+async function loadDocuments() {
+
+    if (!documentsContainer) return;
+
+    if (!documentsLoadedOnce) {
+        documentsContainer.innerHTML = `
+            <div class="doc-loading">Loading documents…</div>
+        `;
+    }
+
+    try {
+
+        documentsData = await icsatFetchJSON(DOCUMENTS_API_URL);
+
+        if (!Array.isArray(documentsData)) {
+            throw new Error("Documents API bir liste döndürmedi.");
+        }
+
+        documentsLoadedOnce = true;
+
+        documentsBuild();
+
+    } catch (err) {
+
+        console.error("Documents yüklenemedi:", err);
+
+        documentsContainer.innerHTML = `
+            <div class="doc-error">
+                <strong>Documents could not be loaded.</strong>
+                <br><br>
+                ${err.message}
+            </div>
+        `;
+    }
+}
+
+/* ================= YARDIMCI: DOSYA İKONU ================= */
+
+function documentsIconFor(url) {
+
+    const ext = String(url || "").split(".").pop().toLowerCase().split("?")[0];
+
+    const icons = {
+        pdf: "📕",
+        doc: "📘",
+        docx: "📘",
+        xls: "📗",
+        xlsx: "📗",
+        ppt: "📙",
+        pptx: "📙",
+        zip: "🗜️",
+        rar: "🗜️"
+    };
+
+    return icons[ext] || "📄";
+}
+
+/* ================= KART OLUŞTUR ================= */
+
+function documentsCreateCard(doc) {
+    return `
+        <a class="doc-card"
+           href="${doc.FileURL || "#"}"
+           target="_blank"
+           rel="noopener noreferrer">
+            <div class="doc-icon">${documentsIconFor(doc.FileURL)}</div>
+            <div class="doc-info">
+                <div class="doc-title">${doc.Title || ""}</div>
+                ${doc.Description ? `<div class="doc-desc">${doc.Description}</div>` : ""}
+            </div>
+            <div class="doc-download" aria-hidden="true">⬇</div>
+        </a>
+    `;
+}
+
+/* ================= BUILD ================= */
+
+function documentsBuild() {
+
+    const seenRows = new Set();
+    const rows = documentsData.filter(row => {
+        const key = JSON.stringify(row);
+        if (seenRows.has(key)) return false;
+        seenRows.add(key);
+        return true;
+    }).filter(row => row.Title && row.FileURL);
+
+    if (rows.length === 0) {
+        documentsContainer.innerHTML = `
+            <div class="doc-wrap">
+                <div class="doc-empty">No documents available yet.</div>
+            </div>
+        `;
+        return;
+    }
+
+    const groupsMap = {};
+    rows.forEach(row => {
+        const cat = row.Category || "Documents";
+        if (!groupsMap[cat]) {
+            groupsMap[cat] = {
+                order: Number(row.CategoryOrder) || 0,
+                items: []
+            };
+        }
+        groupsMap[cat].items.push(row);
+    });
+
+    const groups = Object.keys(groupsMap)
+        .map(name => ({
+            name,
+            order: groupsMap[name].order,
+            items: groupsMap[name].items.sort(
+                (a, b) => (Number(a.Order) || 0) - (Number(b.Order) || 0)
+            )
+        }))
+        .sort((a, b) => a.order - b.order);
+
+    const groupsHtml = groups.map(group => `
+        <div class="doc-group">
+            <h2 class="doc-group-title">${group.name}</h2>
+            <div class="doc-grid">
+                ${group.items.map(documentsCreateCard).join("")}
+            </div>
+        </div>
+    `).join("");
+
+    documentsContainer.innerHTML = `
+        <div class="doc-wrap">
+            ${groupsHtml}
+        </div>
+    `;
+}
+
+/*
+================================================================
+BAŞLAT DOCUMENTS (retry destekli sağlam init deseni)
+================================================================
+*/
+
+let documentsInitDone = false;
+
+function initDocuments() {
+
+    documentsContainer = document.getElementById("icsat-documents");
+
+    if (!documentsContainer) {
+        return false;
+    }
+
+    console.log("✅ Documents container bulundu.");
+
+    if (!documentsInitDone) {
+        documentsInitDone = true;
+        loadDocuments();
+    }
+
+    return true;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    initDocuments();
+});
+
+if (window.jQuery) {
+    jQuery(window).on("elementor/frontend/init", function () {
+        console.log("✅ Elementor frontend hazır (documents).");
+        setTimeout(initDocuments, 300);
+        setTimeout(initDocuments, 1000);
+        setTimeout(initDocuments, 2000);
+    });
+}
+
+let documentsTryCount = 0;
+
+const documentsTryInterval = setInterval(function () {
+
+    documentsTryCount++;
+
+    if (initDocuments()) {
+        clearInterval(documentsTryInterval);
+    }
+
+    if (documentsTryCount >= 20) {
+        clearInterval(documentsTryInterval);
+        console.log("⚠️ Documents container 20 denemede bulunamadı.");
+    }
+
+}, 500);
+
+/*
+================================================================
+ICSAT 2027 — CONGRESS PHOTOS MODÜLÜ (v1.0.10)
+
+Google Sheet "Photos" sekmesi beklenen sütunlar:
+  Year     -> "2026" veya "2027" (yıla göre sekme/tab oluşturmak için)
+  Caption  -> (opsiyonel) fotoğraf altyazısı
+  ImageURL -> Google Drive paylaşım linki (herhangi bir formatta:
+              .../file/d/ID/view, ?id=ID, veya sadece dosya ID'si)
+  Order    -> (opsiyonel) aynı yıl içindeki sıralama, boşsa 0
+
+Google Drive linkleri hotlink için otomatik olarak "thumbnail"
+(liste görünümü) ve "uc?export=view" (lightbox tam boy) formatlarına
+çevrilir. Drive dosyasının paylaşım ayarı "Bağlantıya sahip olan
+herkes" (Anyone with the link) olarak ayarlanmalıdır.
+================================================================
+*/
+
+let photosContainer = document.getElementById("icsat-photos");
+
+const PHOTOS_API_URL =
+    `${ICSAT_SHEETS_API_URL}?sheet=Photos`;
+
+let photosData = [];
+let photosLoadedOnce = false;
+let photosActiveYear = null;
+let photosLightboxIndex = 0;
+let photosCurrentGroup = [];
+
+/* ================= YARDIMCI: GOOGLE DRIVE ID ================= */
+
+function photosExtractDriveId(url) {
+
+    if (!url) return null;
+
+    const raw = String(url).trim();
+
+    let match = raw.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (match) return match[1];
+
+    match = raw.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (match) return match[1];
+
+    if (/^[a-zA-Z0-9_-]{20,}$/.test(raw)) return raw;
+
+    return null;
+}
+
+function photosThumbUrl(url, size) {
+    const id = photosExtractDriveId(url);
+    if (!id) return url;
+    return `https://drive.google.com/thumbnail?id=${id}&sz=${size || "w500"}`;
+}
+
+function photosFullUrl(url) {
+    const id = photosExtractDriveId(url);
+    if (!id) return url;
+    return `https://drive.google.com/uc?export=view&id=${id}`;
+}
+
+async function loadPhotos() {
+
+    if (!photosContainer) return;
+
+    if (!photosLoadedOnce) {
+        photosContainer.innerHTML = `
+            <div class="photo-loading">Loading photos…</div>
+        `;
+    }
+
+    try {
+
+        photosData = await icsatFetchJSON(PHOTOS_API_URL);
+
+        if (!Array.isArray(photosData)) {
+            throw new Error("Photos API bir liste döndürmedi.");
+        }
+
+        photosLoadedOnce = true;
+
+        photosBuild();
+
+    } catch (err) {
+
+        console.error("Photos yüklenemedi:", err);
+
+        photosContainer.innerHTML = `
+            <div class="photo-error">
+                <strong>Photos could not be loaded.</strong>
+                <br><br>
+                ${err.message}
+            </div>
+        `;
+    }
+}
+
+/* ================= BUILD ================= */
+
+function photosBuild() {
+
+    const seenRows = new Set();
+    const rows = photosData.filter(row => {
+        const key = JSON.stringify(row);
+        if (seenRows.has(key)) return false;
+        seenRows.add(key);
+        return true;
+    }).filter(row => row.ImageURL);
+
+    if (rows.length === 0) {
+        photosContainer.innerHTML = `
+            <div class="photo-wrap">
+                <div class="photo-empty">No photos available yet.</div>
+            </div>
+        `;
+        return;
+    }
+
+    const yearsMap = {};
+    rows.forEach(row => {
+        const year = String(row.Year || "Other");
+        if (!yearsMap[year]) yearsMap[year] = [];
+        yearsMap[year].push(row);
+    });
+
+    Object.keys(yearsMap).forEach(year => {
+        yearsMap[year].sort((a, b) => (Number(a.Order) || 0) - (Number(b.Order) || 0));
+    });
+
+    const preferredOrder = ["2027", "2026"];
+    const years = Object.keys(yearsMap).sort((a, b) => {
+        const ai = preferredOrder.indexOf(a);
+        const bi = preferredOrder.indexOf(b);
+        if (ai !== -1 || bi !== -1) {
+            return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+        }
+        return b.localeCompare(a);
+    });
+
+    if (!photosActiveYear || !yearsMap[photosActiveYear]) {
+        photosActiveYear = years[0];
+    }
+
+    const tabsHtml = years.map(year => `
+        <button type="button"
+                class="photo-tab ${year === photosActiveYear ? "photo-tab-active" : ""}"
+                data-year="${year}">
+            ICSAT ${year}
+        </button>
+    `).join("");
+
+    const activeItems = yearsMap[photosActiveYear] || [];
+    photosCurrentGroup = activeItems;
+
+    const gridHtml = activeItems.map((item, index) => `
+        <div class="photo-item" data-index="${index}">
+            <img src="${photosThumbUrl(item.ImageURL, "w500")}"
+                 alt="${item.Caption || "ICSAT " + photosActiveYear}"
+                 loading="lazy">
+            ${item.Caption ? `<div class="photo-caption">${item.Caption}</div>` : ""}
+        </div>
+    `).join("");
+
+    photosContainer.innerHTML = `
+        <div class="photo-wrap">
+            <div class="photo-tabs">${tabsHtml}</div>
+            <div class="photo-grid">${gridHtml}</div>
+        </div>
+        <div class="photo-lightbox" id="icsat-photo-lightbox">
+            <button type="button" class="photo-lb-close" aria-label="Close">✕</button>
+            <button type="button" class="photo-lb-prev" aria-label="Previous">‹</button>
+            <img class="photo-lb-img" src="" alt="">
+            <div class="photo-lb-caption"></div>
+            <button type="button" class="photo-lb-next" aria-label="Next">›</button>
+        </div>
+    `;
+
+    photosBindEvents();
+}
+
+/* ================= EVENTLER ================= */
+
+function photosBindEvents() {
+
+    const tabs = photosContainer.querySelectorAll(".photo-tab");
+    tabs.forEach(tab => {
+        tab.addEventListener("click", function () {
+            photosActiveYear = this.dataset.year;
+            photosBuild();
+        });
+    });
+
+    const items = photosContainer.querySelectorAll(".photo-item");
+    items.forEach(item => {
+        item.addEventListener("click", function () {
+            photosLightboxIndex = Number(this.dataset.index);
+            photosOpenLightbox();
+        });
+    });
+
+    const lightbox = document.getElementById("icsat-photo-lightbox");
+    if (!lightbox) return;
+
+    lightbox.querySelector(".photo-lb-close")
+        .addEventListener("click", photosCloseLightbox);
+
+    lightbox.addEventListener("click", function (e) {
+        if (e.target === lightbox) photosCloseLightbox();
+    });
+
+    lightbox.querySelector(".photo-lb-prev")
+        .addEventListener("click", function () {
+            photosLightboxIndex =
+                (photosLightboxIndex - 1 + photosCurrentGroup.length) % photosCurrentGroup.length;
+            photosRenderLightbox();
+        });
+
+    lightbox.querySelector(".photo-lb-next")
+        .addEventListener("click", function () {
+            photosLightboxIndex =
+                (photosLightboxIndex + 1) % photosCurrentGroup.length;
+            photosRenderLightbox();
+        });
+
+    document.addEventListener("keydown", photosHandleKeydown);
+}
+
+function photosHandleKeydown(e) {
+    const lightbox = document.getElementById("icsat-photo-lightbox");
+    if (!lightbox || !lightbox.classList.contains("photo-lb-open")) return;
+
+    if (e.key === "Escape") photosCloseLightbox();
+    if (e.key === "ArrowLeft") lightbox.querySelector(".photo-lb-prev").click();
+    if (e.key === "ArrowRight") lightbox.querySelector(".photo-lb-next").click();
+}
+
+function photosOpenLightbox() {
+    const lightbox = document.getElementById("icsat-photo-lightbox");
+    if (!lightbox) return;
+    lightbox.classList.add("photo-lb-open");
+    document.body.style.overflow = "hidden";
+    photosRenderLightbox();
+}
+
+function photosCloseLightbox() {
+    const lightbox = document.getElementById("icsat-photo-lightbox");
+    if (!lightbox) return;
+    lightbox.classList.remove("photo-lb-open");
+    document.body.style.overflow = "";
+}
+
+function photosRenderLightbox() {
+    const lightbox = document.getElementById("icsat-photo-lightbox");
+    if (!lightbox) return;
+
+    const item = photosCurrentGroup[photosLightboxIndex];
+    if (!item) return;
+
+    lightbox.querySelector(".photo-lb-img").src = photosFullUrl(item.ImageURL);
+    lightbox.querySelector(".photo-lb-caption").textContent = item.Caption || "";
+}
+
+/*
+================================================================
+BAŞLAT PHOTOS (retry destekli sağlam init deseni)
+================================================================
+*/
+
+let photosInitDone = false;
+
+function initPhotos() {
+
+    photosContainer = document.getElementById("icsat-photos");
+
+    if (!photosContainer) {
+        return false;
+    }
+
+    console.log("✅ Photos container bulundu.");
+
+    if (!photosInitDone) {
+        photosInitDone = true;
+        loadPhotos();
+    }
+
+    return true;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    initPhotos();
+});
+
+if (window.jQuery) {
+    jQuery(window).on("elementor/frontend/init", function () {
+        console.log("✅ Elementor frontend hazır (photos).");
+        setTimeout(initPhotos, 300);
+        setTimeout(initPhotos, 1000);
+        setTimeout(initPhotos, 2000);
+    });
+}
+
+let photosTryCount = 0;
+
+const photosTryInterval = setInterval(function () {
+
+    photosTryCount++;
+
+    if (initPhotos()) {
+        clearInterval(photosTryInterval);
+    }
+
+    if (photosTryCount >= 20) {
+        clearInterval(photosTryInterval);
+        console.log("⚠️ Photos container 20 denemede bulunamadı.");
     }
 
 }, 500);
