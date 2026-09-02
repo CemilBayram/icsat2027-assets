@@ -1,6 +1,6 @@
 /* =========================================================
    ICSAT 2027 — SPEAKERS
-   FINAL CLEAN CSS - V1.0.8
+   FINAL CLEAN CSS - V1.0.9
    ========================================================= */
 
 
@@ -3087,6 +3087,7 @@
     --reg-muted: #64748b;
     --reg-border: #e5eaf3;
     --reg-danger: #ef4444;
+    --reg-maroon: #7a1c2e;
 }
 
 #icsat-registration .reg-wrap {
@@ -3262,6 +3263,11 @@
     font-size: 14.5px;
     color: #1e293b;
     line-height: 1.6;
+}
+
+#icsat-registration .reg-highlight {
+    color: var(--reg-maroon);
+    font-weight: 700;
 }
 
 /* ---- Yükleniyor / hata / boş durumlar ---- */
