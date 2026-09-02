@@ -2168,8 +2168,8 @@ Google Sheet "Registration" sekmesindeki beklenen sütunlar
               tek fiyat olarak gösterilir (örn. Student, Accompanying Person)
 
   Section=Meta beklenen Key'ler:
-    EarlyDateLabel -> "Before 15 April 2027"
-    LateDateLabel  -> "After 15 April 2027"
+    EarlyDate -> "Before 15 April 2027"
+    LateDate  -> "After 15 April 2027"
     Footnote1, Footnote2, ... -> madde madde alt notlar
     ReceiptNote    -> ödeme sonrası dekont notu
 
@@ -2235,6 +2235,21 @@ function registrationMetaMap(rows) {
         if (row.Key) map[row.Key] = row.Label || "";
     });
     return map;
+}
+
+/* ================= YARDIMCI: TIRNAK İÇİNİ VURGULA =================
+   "ICSAT 2027 – Your Name" gibi tırnak içine alınmış (düz " " veya
+   akıllı “ ” tırnak) ifadeleri otomatik olarak kalın + bordo yapar.
+   Sheets'te ReceiptNote hücresine nasıl yazarsan yaz, tırnak içine
+   aldığın kısım otomatik vurgulanır — kodda elle bir şey değiştirmene
+   gerek kalmaz.
+==================================================================== */
+
+function registrationHighlightQuotes(text) {
+    if (!text) return "";
+    return String(text).replace(/"([^"]*)"|“([^”]*)”/g, function (match) {
+        return `<strong class="reg-highlight">${match}</strong>`;
+    });
 }
 
 /* ================= FEE SATIRI OLUŞTUR ================= */
@@ -2341,7 +2356,7 @@ function registrationBuild() {
     const noteHtml = meta.ReceiptNote
         ? `
             <div class="reg-note">
-                <p>${meta.ReceiptNote}</p>
+                <p>${registrationHighlightQuotes(meta.ReceiptNote)}</p>
             </div>
         `
         : "";
@@ -2351,7 +2366,7 @@ function registrationBuild() {
 
             <div class="reg-card">
                 <header class="reg-header">
-                    <div class="reg-logo">₺</div>
+                    <div class="reg-logo">$</div>
                     <div>
                         <h2 class="reg-title">Registration Fees</h2>
                         <p class="reg-lead">Please review the fees below and complete your registration before the deadline.</p>
@@ -2365,11 +2380,11 @@ function registrationBuild() {
                                 <th>Registration Type</th>
                                 <th>
                                     Early Registration
-                                    <span class="reg-subnote">(${meta.EarlyDateLabel || ""})</span>
+                                    ${meta.EarlyDate ? `<span class="reg-subnote">(${meta.EarlyDate})</span>` : ""}
                                 </th>
                                 <th>
                                     Late Registration
-                                    <span class="reg-subnote">(${meta.LateDateLabel || ""})</span>
+                                    ${meta.LateDate ? `<span class="reg-subnote">(${meta.LateDate})</span>` : ""}
                                 </th>
                             </tr>
                             <tr class="reg-head-sub">
