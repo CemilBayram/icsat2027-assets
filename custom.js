@@ -2,7 +2,7 @@ console.log(
     "%c🔥 ICSAT CUSTOM.JS YENİ SÜRÜM ÇALIŞIYOR 🔥",
     "color:red;font-size:20px;font-weight:bold;"
 );
-console.log("ICSAT ASSETS — v1.0.10");
+console.log("ICSAT ASSETS — v1.1.0");
 
 /*
 ================================================================
@@ -1070,6 +1070,46 @@ const PROGRAM_API_URL =
 
 let programData = [];
 let programLoadedOnce = false;
+let programLastSearch = "";
+
+/*
+================================================================
+BOOKMARK / TAKİP EDİLEN OTURUMLAR
+Gerçek sitede (Claude sandbox'ın aksine) tarayıcının normal
+localStorage'ı sorunsuz çalışır — kullanıcının işaretlediği
+oturumlar sayfa yenilense de, siteden çıkıp geri gelse de kalıcı
+kalır. localStorage bazı gizli/özel tarama modlarında hata
+fırlatabildiği için try/catch ile sarmalanıyor.
+================================================================
+*/
+
+const PROGRAM_FOLLOWED_STORAGE_KEY = "icsatFollowedSessions";
+
+function programLoadFollowed() {
+    try {
+        const raw = localStorage.getItem(PROGRAM_FOLLOWED_STORAGE_KEY);
+        return new Set(raw ? JSON.parse(raw) : []);
+    } catch (err) {
+        return new Set();
+    }
+}
+
+function programSaveFollowed() {
+    try {
+        localStorage.setItem(
+            PROGRAM_FOLLOWED_STORAGE_KEY,
+            JSON.stringify(Array.from(programFollowedIds))
+        );
+    } catch (err) {
+        console.error("Bookmarks could not be saved:", err);
+    }
+}
+
+let programFollowedIds = programLoadFollowed();
+
+// "Live Now" bandını kapatma sadece bu sayfa yüklemesi boyunca geçerli —
+// sayfa yenilenince (F5) otomatik olarak tekrar açık başlar (bilinçli tercih).
+let programLiveStickyDismissed = false;
 
 async function loadProgram() {
 
@@ -1193,6 +1233,18 @@ function programGetTimeLeft(session, iso) {
     return `${h}h ${m}m left`;
 }
 
+// Canlı bir oturumun/blok'un bitimine ne kadar kaldığını yazıya çevirir —
+// progress bar'ın altındaki "X% complete · Y left" etiketinde kullanılır.
+function programGetTimeUntilEnd(session, iso) {
+    const target = new Date(`${iso}T${session.end || "00:00"}:00+03:00`);
+    const diff = target - new Date();
+    if (diff <= 0) return "ended";
+
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    return h > 0 ? `${h}h ${m}m left` : `${m}m left`;
+}
+
 function programGetSpecial(title = "") {
     const t = title.toLowerCase();
     if (t.includes("lunch")) return "lunch";
@@ -1209,6 +1261,53 @@ function programParseType(session) {
         isInvited: raw.includes("invited"),
         isChair: raw.includes("chair")
     };
+}
+
+/*
+================================================================
+CHAIR BLOKLARI — GRUPLAMA
+Chair, 30 dakikalık kendi sunumunu yapmaz; tüm oturum boyunca
+orada durur ve bildirileri sırayla açar. Bu yüzden Sheet'te Chair
+satırı TÜM BLOĞUN başlangıç-bitiş saatini kapsar (ör. 10:00-12:00),
+altındaki bildiriler ise aynı oda + aynı saat aralığında AYRI
+satırlar olarak girilir. Buradaki fonksiyon, aynı odada bir Chair
+satırının zaman aralığına "gömülü" (start/end o aralığın içinde
+kalan) diğer satırları bulup o Chair'in altına bildiri olarak
+topluyor — Sheet'e veya kod.gs'e yeni bir sütun eklemeye gerek
+kalmıyor, sadece oda+saat çakışmasına bakılıyor.
+
+Bir Chair satırının altında hiç bildiri bulunamazsa (ör. henüz
+Sheet'e bildiriler girilmemişse) o satır normal bir oturum kartı
+gibi gösterilir — boş bir mini-ajanda kutusu görünmesin diye.
+================================================================
+*/
+
+function programGroupChairBlocks(sessions) {
+    const list = sessions.slice();
+    const chairRows = list.filter(s => programParseType(s).isChair);
+
+    const consumed = new Set();
+    const blocks = [];
+
+    chairRows.forEach(chair => {
+        const talks = list.filter(s => {
+            if (s === chair) return false;
+            if (consumed.has(s)) return false;
+            if (programParseType(s).isChair) return false; // bir chair diğerinin içine gömülmesin
+            return (s.start || "") >= (chair.start || "") && (s.end || "") <= (chair.end || "");
+        }).sort((a, b) => (a.start || "").localeCompare(b.start || ""));
+
+        if (talks.length === 0) return; // boş chair — normal oturum gibi kalsın
+
+        talks.forEach(t => consumed.add(t));
+        consumed.add(chair);
+
+        blocks.push({ chair, talks });
+    });
+
+    const standalone = list.filter(s => !consumed.has(s));
+
+    return { blocks, standalone };
 }
 
 /* ================= ODA YARDIMCILARI ================= */
@@ -1229,7 +1328,7 @@ function programRoomSort(a, b) {
 
 /* ================= OTURUM KARTI ================= */
 
-function programCreateSession(session, iso) {
+function programCreateSession(session, iso, nextItem) {
 
     const status = programGetStatus(session, iso);
     const special = programGetSpecial(session.title);
@@ -1269,22 +1368,39 @@ function programCreateSession(session, iso) {
             ${ending ? `<div class="badge-sub">Ending soon</div>` : ""}
         `;
 
+        // Progress bar artık sadece renkli çubuk değil — üstünde
+        // "%kaç tamamlandı · ne kadar kaldı" yazısı var, tek bakışta
+        // ilerleme çubuğu olduğu anlaşılsın diye.
         progressHTML = `
-            <div class="progress-track">
-                <div class="progress-fill ${ending ? "ending" : ""}" style="width:${pct.toFixed(0)}%"></div>
+            <div class="progress-wrap">
+                <div class="progress-label ${ending ? "ending" : ""}">
+                    <span>${pct.toFixed(0)}% complete</span>
+                    <span>${programGetTimeUntilEnd(session, iso)}</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill ${ending ? "ending" : ""}" style="width:${pct.toFixed(0)}%"></div>
+                </div>
             </div>
         `;
     } else {
         badgeHTML = `<div class="badge-main">FINISHED</div>`;
     }
 
-    // Sticky "şu an canlı" bandının ve programRefreshBadges()'in her oturumu
-    // veriye tekrar erişmeden, DOM üzerinden tanıyabilmesi için gerekli bilgiler.
+    // Chair'ler ve o salonu takip edenler için: canlı oturumun altında
+    // "Next up" ipucu — salonu terk etmeden sırada ne var görebiliyorlar.
+    const nextHTML = (status === "live" && nextItem)
+        ? `<div class="ip-next">Next up: <b>${nextItem.start || ""}</b> — ${nextItem.title || ""}</div>`
+        : "";
+
+    // Sticky "şu an canlı" bandının, takip listesinin ve
+    // programRefreshBadges()'in her oturumu veriye tekrar erişmeden, DOM
+    // üzerinden tanıyabilmesi için gerekli bilgiler.
     const sessionId = `sess-${iso}-${(session.room || "").replace(/\s+/g, "_")}-${(session.start || "").replace(":", "")}`;
+    const isFollowed = programFollowedIds.has(sessionId);
 
     const el = document.createElement("div");
     el.id = sessionId;
-    el.className = `ip-session ${special} ${isPoster ? "poster-session" : ""} ${isKeynote ? "keynote-session" : ""} ${status === "live" ? "is-live" : ""}`;
+    el.className = `ip-session ${special} ${isPoster ? "poster-session" : ""} ${isKeynote ? "keynote-session" : ""} ${status === "live" ? "is-live" : ""} ${isFollowed ? "is-followed" : ""}`;
     el.dataset.iso = iso;
     el.dataset.start = session.start || "";
     el.dataset.end = session.end || "";
@@ -1292,10 +1408,123 @@ function programCreateSession(session, iso) {
     el.dataset.title = session.title || "";
 
     el.innerHTML = `
+        <div class="ip-follow" title="Follow / unfollow this session" data-follow-id="${sessionId}">${isFollowed ? "⭐" : "☆"}</div>
         <div class="ip-time">${session.start} - ${session.end}</div>
         <div class="ip-title2">${typeBadge} ${session.title || ""}</div>
         <div class="ip-speaker">${speakerBadge} ${session.speaker || ""}</div>
         ${progressHTML}
+        ${nextHTML}
+        <div class="ip-badge ${status}">${badgeHTML}</div>
+    `;
+
+    return el;
+}
+
+/*
+================================================================
+CHAIR-LED SESSION KARTI
+Chair kendisi sunum yapmaz — kart bloğun TÜMÜNÜ (ör. 10:00-12:00)
+kapsar, durum/progress bar da tek bir bildiri değil tüm blok
+üzerinden hesaplanır ("2/3 papers presented" gibi). Kartın altında
+her bildirinin kendi saatiyle listelendiği bir mini-ajanda var;
+o anda sunulan bildiri otomatik olarak "● Now presenting" ile,
+bitenler "✓ Done" ile işaretleniyor.
+================================================================
+*/
+
+function programCreateChairBlock(chair, talks, iso, nextItem) {
+
+    const status = programGetStatus(chair, iso);
+    const talksDone = talks.filter(t => programGetStatus(t, iso) === "finished").length;
+
+    let badgeHTML = "";
+    let progressHTML = "";
+
+    if (status === "upcoming" || status === "soon") {
+        badgeHTML = `
+            <div class="badge-main">${status === "soon" ? "STARTING SOON" : "UPCOMING"}</div>
+            <div class="badge-sub">${programGetTimeLeft(chair, iso)}</div>
+        `;
+    } else if (status === "live") {
+        const { pct, ending } = programGetProgress(chair, iso);
+
+        badgeHTML = `
+            <div class="badge-main">LIVE NOW</div>
+            ${ending ? `<div class="badge-sub">Ending soon</div>` : ""}
+        `;
+
+        progressHTML = `
+            <div class="progress-wrap">
+                <div class="progress-label ${ending ? "ending" : ""}">
+                    <span>${talksDone}/${talks.length} papers presented</span>
+                    <span>${programGetTimeUntilEnd(chair, iso)}</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill ${ending ? "ending" : ""}" style="width:${pct.toFixed(0)}%"></div>
+                </div>
+            </div>
+        `;
+    } else {
+        badgeHTML = `<div class="badge-main">FINISHED</div>`;
+    }
+
+    const nextHTML = (status === "live" && nextItem)
+        ? `<div class="ip-next">Next up: <b>${nextItem.start || ""}</b> — ${nextItem.title || ""}</div>`
+        : "";
+
+    // Her bildiri satırı iki alt satıra bölünmüş durumda: üstte saat + tip
+    // rozeti + durum ("Now presenting"/"Done") yan yana, altta başlık tam
+    // genişlikte kendi satırında — uzun akademik başlıklarda bile kart
+    // dikeyde kontrolsüzce büyümüyor. Durum class'ları bilinçli olarak
+    // "state-" önekiyle: sadece "upcoming/live/finished" ismini kullansaydık
+    // sayfadaki genel rozet renkleriyle (aynı isimli class) çakışıp yanlış
+    // renk (mavi) miras alınırdı.
+    const agendaHTML = talks.map(t => {
+        const tStatus = programGetStatus(t, iso);
+        let stateClass = "state-upcoming", stateTag = "";
+        if (tStatus === "finished") { stateClass = "state-done"; stateTag = "✓ Done"; }
+        else if (tStatus === "live") { stateClass = "state-now"; stateTag = "● Now presenting"; }
+
+        const { isKeynote, isPoster, isOral, isInvited } = programParseType(t);
+        let typeBadge = "";
+        if (isKeynote) typeBadge = `<span class="keynote-badge">⭐ Key-Note</span>`;
+        else if (isPoster) typeBadge = `<span class="poster-badge">POSTER</span>`;
+        else if (isOral) typeBadge = `<span class="oral-badge">ORAL</span>`;
+        else if (isInvited) typeBadge = `<span class="invited-badge">INVITED</span>`;
+
+        return `
+            <div class="chair-agenda-item ${stateClass}">
+                <div class="ca-row">
+                    <span class="ca-time">${t.start || ""}</span>
+                    ${typeBadge}
+                    ${stateTag ? `<span class="ca-state">${stateTag}</span>` : ""}
+                </div>
+                <div class="ca-title">${t.title || ""}</div>
+                <div class="ca-speaker">${t.speaker || ""}</div>
+            </div>
+        `;
+    }).join("");
+
+    const sessionId = `sess-${iso}-${(chair.room || "").replace(/\s+/g, "_")}-${(chair.start || "").replace(":", "")}`;
+    const isFollowed = programFollowedIds.has(sessionId);
+
+    const el = document.createElement("div");
+    el.id = sessionId;
+    el.className = `ip-session ip-chairblock ${status === "live" ? "is-live" : ""} ${isFollowed ? "is-followed" : ""}`;
+    el.dataset.iso = iso;
+    el.dataset.start = chair.start || "";
+    el.dataset.end = chair.end || "";
+    el.dataset.room = chair.room || "";
+    el.dataset.title = chair.title || "";
+
+    el.innerHTML = `
+        <div class="ip-follow" title="Follow / unfollow this session" data-follow-id="${sessionId}">${isFollowed ? "⭐" : "☆"}</div>
+        <div class="ip-time">${chair.start} - ${chair.end}</div>
+        <div class="ip-title2"><span class="chair-badge">🎤 CHAIR-LED SESSION</span> ${chair.title || ""}</div>
+        <div class="ip-speaker">Chaired by ${chair.speaker || ""}</div>
+        ${progressHTML}
+        <div class="chair-agenda">${agendaHTML}</div>
+        ${nextHTML}
         <div class="ip-badge ${status}">${badgeHTML}</div>
     `;
 
@@ -1322,12 +1551,28 @@ function programBuildGrid(roomNames, sessionsByRoom, isOnline) {
 
         card.innerHTML = `<div class="ip-room">${room}${zoomHeader}</div>`;
 
-        sessionsByRoom[room]
-            .slice()
-            .sort((a, b) => (a.start || "").localeCompare(b.start || ""))
-            .forEach(session => {
-                card.appendChild(programCreateSession(session, sessionsByRoom.__iso));
-            });
+        // Chair bloklarını (varsa) tespit edip altındaki bildirileri
+        // topluyoruz; geri kalan satırlar normal oturum olarak kalıyor.
+        const { blocks, standalone } = programGroupChairBlocks(sessionsByRoom[room]);
+
+        const renderItems = [
+            ...blocks.map(b => ({ kind: "chairblock", chair: b.chair, talks: b.talks, sortKey: b.chair.start || "" })),
+            ...standalone.map(s => ({ kind: "session", session: s, sortKey: s.start || "" }))
+        ].sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+
+        renderItems.forEach((item, idx) => {
+
+            const nextEntry = renderItems[idx + 1] || null;
+            const nextRef = nextEntry
+                ? (nextEntry.kind === "chairblock" ? nextEntry.chair : nextEntry.session)
+                : null;
+
+            const el = item.kind === "chairblock"
+                ? programCreateChairBlock(item.chair, item.talks, sessionsByRoom.__iso, nextRef)
+                : programCreateSession(item.session, sessionsByRoom.__iso, nextRef);
+
+            card.appendChild(el);
+        });
 
         grid.appendChild(card);
     });
@@ -1339,11 +1584,15 @@ function programBuildGrid(roomNames, sessionsByRoom, isOnline) {
 
 function programBuild(search = "") {
 
+    programLastSearch = search;
+
     programContainer.innerHTML = "";
 
-    // Çok salonlu "şu an canlı" bandı — gün döngüsünden önce, sabit tek bir yerde.
+    // Çok salonlu "şu an canlı" bandı ve "takip ettiklerim" şeridi —
+    // gün döngüsünden önce, sabit tek bir yerde.
     programContainer.insertAdjacentHTML("beforeend", `
         <div class="live-sticky" id="programLiveSticky"></div>
+        <div class="follow-sticky" id="programFollowSticky"></div>
     `);
 
     // Geçerli günleri (ISO tarihe çevrilebilenleri) bul, kronolojik sırala.
@@ -1419,91 +1668,56 @@ function programBuild(search = "") {
         }
     });
 
-    // İlk çizimden hemen sonra badge/sticky durumunu bir kez hesapla
-    // (60 saniyelik tam veri yenilemesini beklemeye gerek yok).
-    programRefreshBadges();
+    // İlk çizimden hemen sonra sticky bantları (canlı + takip edilenler) güncelle.
+    const { liveList, followedList } = programCollectStickyLists();
+    programUpdateStickyBar(liveList);
+    programUpdateFollowSticky(followedList);
 }
 
 /*
 ================================================================
-CANLI GÜNCELLEME (tam veri yenilemesi olmadan badge/sticky "tick")
+STICKY BANTLAR İÇİN VERİ TOPLAMA
+Artık DOM'daki data-* özniteliklerini tek tek okuyup badge/progress
+patch'lemek yerine, her ~20 saniyede bir programBuild() TAMAMEN
+yeniden çiziliyor (bkz. programRefreshBadges) — Chair blokları
+gibi iç içe yapılar için bu, kırılgan bir DOM-patch mantığından
+çok daha güvenilir. Bu fonksiyon sadece taze çizilmiş DOM'dan
+"şu an canlı" ve "takip edilen" oturumları toplayıp iki sticky
+banda besliyor.
 ================================================================
-Bu fonksiyon veriyi tekrar Sheets'ten çekmez — sadece zaten DOM'da
-olan oturum kartlarının data-* özniteliklerini okuyup durumlarını
-(upcoming → soon → live → finished) ve ilerleme yüzdesini yeniden
-hesaplar. loadProgram() 60 saniyede bir TAM yeniden çizim yaparken,
-bu fonksiyon araya girip her ~20 saniyede bir sadece görünümü
-tazeler — böylece "3 dakika kaldı" gibi geri sayımlar akıcı kalır
-ve bir oturum canlıya geçtiği an kullanıcı 60 saniye beklemeden görür.
+*/
+
+function programCollectStickyLists() {
+    const liveList = [];
+    const followedList = [];
+
+    programContainer.querySelectorAll(".ip-session[id]").forEach(el => {
+        const info = { room: el.dataset.room || "", title: el.dataset.title || "", elId: el.id };
+        if (el.classList.contains("is-live")) liveList.push(info);
+        if (programFollowedIds.has(el.id)) followedList.push(info);
+    });
+
+    return { liveList, followedList };
+}
+
+/*
+================================================================
+CANLI GÜNCELLEME (20 saniyede bir)
+================================================================
+Bu fonksiyon veriyi tekrar Sheets'ten çekmez (o iş 60 saniyede bir
+loadProgram()'da oluyor) — sadece programData'dan aynı verilerle
+programBuild()'i yeniden çalıştırır, böylece "3 dakika kaldı" gibi
+geri sayımlar, Chair bloklarındaki "Now presenting" vurgusu ve
+progress bar'lar akıcı kalır. Önceki sürümde bu, DOM üzerinde tek
+tek badge patch'leyen daha "hafif" bir fonksiyondu; Chair blokları
+eklenince (iç içe mini-ajanda, değişken sayıda alt bildiri) DOM
+patch'leme kırılgan hale geldiği için bilinçli olarak basitleştirildi.
+================================================================
 */
 
 function programRefreshBadges() {
-
     if (!programContainer) return;
-
-    const liveSessions = [];
-
-    programContainer.querySelectorAll(".ip-session[data-start]").forEach(el => {
-
-        const session = {
-            start: el.dataset.start,
-            end: el.dataset.end,
-            room: el.dataset.room,
-            title: el.dataset.title
-        };
-        const iso = el.dataset.iso;
-
-        if (!session.start || !iso) return;
-
-        const status = programGetStatus(session, iso);
-
-        el.classList.toggle("is-live", status === "live");
-
-        const badgeEl = el.querySelector(".ip-badge");
-        if (!badgeEl) return;
-
-        badgeEl.className = `ip-badge ${status}`;
-
-        let badgeHTML = "";
-        let progressHTML = "";
-
-        if (status === "upcoming" || status === "soon") {
-            badgeHTML = `
-                <div class="badge-main">${status === "soon" ? "STARTING SOON" : "UPCOMING"}</div>
-                <div class="badge-sub">${programGetTimeLeft(session, iso)}</div>
-            `;
-        } else if (status === "live") {
-            const { pct, ending } = programGetProgress(session, iso);
-
-            badgeHTML = `
-                <div class="badge-main">LIVE NOW</div>
-                ${ending ? `<div class="badge-sub">Ending soon</div>` : ""}
-            `;
-
-            progressHTML = `
-                <div class="progress-track">
-                    <div class="progress-fill ${ending ? "ending" : ""}" style="width:${pct.toFixed(0)}%"></div>
-                </div>
-            `;
-
-            liveSessions.push({ room: session.room, title: session.title, elId: el.id });
-        } else {
-            badgeHTML = `<div class="badge-main">FINISHED</div>`;
-        }
-
-        badgeEl.innerHTML = badgeHTML;
-
-        const existingProgress = el.querySelector(".progress-track");
-        if (progressHTML && existingProgress) {
-            existingProgress.outerHTML = progressHTML;
-        } else if (progressHTML && !existingProgress) {
-            badgeEl.insertAdjacentHTML("beforebegin", progressHTML);
-        } else if (!progressHTML && existingProgress) {
-            existingProgress.remove();
-        }
-    });
-
-    programUpdateStickyBar(liveSessions);
+    programBuild(programLastSearch);
 }
 
 // Aynı anda birden fazla salonda (yüz yüzede 4, online günlerde 3'e kadar)
@@ -1513,20 +1727,81 @@ function programUpdateStickyBar(liveSessions) {
     const sticky = document.getElementById("programLiveSticky");
     if (!sticky) return;
 
-    if (liveSessions.length === 0) {
+    if (liveSessions.length === 0 || programLiveStickyDismissed) {
         sticky.classList.remove("show");
         sticky.innerHTML = "";
         return;
     }
 
     sticky.classList.add("show");
-    sticky.innerHTML = liveSessions.map(s => `
-        <div class="live-sticky-chip" onclick="document.getElementById('${s.elId}')?.scrollIntoView({behavior:'smooth', block:'center'})">
-            <span class="dot"></span>
-            <span class="chip-room">${s.room}</span>
-            <span class="chip-title">${s.title}</span>
+    sticky.innerHTML = `
+        <div class="sticky-heading">🔴 Live Now<span class="sticky-close" title="Hide until page reload">✕</span></div>
+        <div class="sticky-chips">
+            ${liveSessions.map(s => `
+                <div class="live-sticky-chip" onclick="document.getElementById('${s.elId}')?.scrollIntoView({behavior:'smooth', block:'center'})">
+                    <span class="dot"></span>
+                    <span class="chip-room">${s.room}</span>
+                    <span class="chip-title">${s.title}</span>
+                </div>
+            `).join("")}
         </div>
-    `).join("");
+    `;
+
+    // Kapatma tuşuna basınca bant kaybolur ve sayfa yenilenene kadar
+    // (F5) tekrar açılmaz — rahatsız olanlar için tercih.
+    const closeBtn = sticky.querySelector(".sticky-close");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", e => {
+            e.stopPropagation();
+            programLiveStickyDismissed = true;
+            sticky.classList.remove("show");
+            sticky.innerHTML = "";
+        });
+    }
+}
+
+// Kullanıcının ⭐ ile işaretlediği oturumları üstte, ayrı bir bantta listeler.
+function programUpdateFollowSticky(followedSessions) {
+
+    const sticky = document.getElementById("programFollowSticky");
+    if (!sticky) return;
+
+    if (followedSessions.length === 0) {
+        sticky.classList.remove("show");
+        sticky.innerHTML = "";
+        return;
+    }
+
+    sticky.classList.add("show");
+    sticky.innerHTML = `
+        <div class="sticky-heading">⭐ Your Bookmarked Sessions</div>
+        <div class="sticky-chips">
+            ${followedSessions.map(s => `
+                <div class="follow-sticky-chip" onclick="document.getElementById('${s.elId}')?.scrollIntoView({behavior:'smooth', block:'center'})">
+                    <span>⭐</span>
+                    <span class="chip-room">${s.room}</span>
+                    <span class="chip-title">${s.title}</span>
+                </div>
+            `).join("")}
+        </div>
+    `;
+}
+
+// ⭐/☆ ikonuna tıklanınca takip et/bırak — event delegation ile TEK bir
+// listener, çünkü kartlar her 20 saniyede bir yeniden çiziliyor ve
+// tek tek her yıldıza listener bağlamak gereksiz/kırılgan olurdu.
+function programHandleFollowClick(e) {
+    const star = e.target.closest(".ip-follow");
+    if (!star || !programContainer || !programContainer.contains(star)) return;
+
+    const id = star.dataset.followId;
+    if (!id) return;
+
+    if (programFollowedIds.has(id)) programFollowedIds.delete(id);
+    else programFollowedIds.add(id);
+
+    programSaveFollowed();
+    programBuild(programLastSearch);
 }
 
 /*
@@ -1549,9 +1824,10 @@ function initProgram() {
 
     if (!programInitDone) {
         programInitDone = true;
+        programContainer.addEventListener("click", programHandleFollowClick); // ⭐ takip tıklamaları
         loadProgram();
         setInterval(loadProgram, 60000);       // tam veri yenilemesi (Sheets'ten)
-        setInterval(programRefreshBadges, 20000); // sadece badge/sticky "tick" (veri çekmez)
+        setInterval(programRefreshBadges, 20000); // görünümü tazele (veri çekmez)
     }
 
     return true;
