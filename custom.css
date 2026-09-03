@@ -1,6 +1,6 @@
 /* =========================================================
    ICSAT 2027 — SPEAKERS
-   FINAL CLEAN CSS - V1.0.10
+   FINAL CLEAN CSS - V1.1.0
    ========================================================= */
 
 
@@ -2235,13 +2235,13 @@
     font-size: 10px;
     font-weight: 900;
 
-    background: linear-gradient(135deg, #0984e3, #74b9ff);
+    background: linear-gradient(135deg, #0f9b8e, #4fd8c4);
     color: white;
 
     border-radius: 20px;
     letter-spacing: 0.9px;
 
-    box-shadow: 0 3px 3px rgba(9, 132, 227, 0.4);
+    box-shadow: 0 3px 3px rgba(15, 155, 142, 0.4);
 
     text-transform: uppercase;
 }
@@ -2272,11 +2272,69 @@
     border-left: 4px solid #2ecc71;
 }
 
-/* Oturum ilerleme çubuğu (sadece LIVE oturumlarda görünür) */
-#icsat-pro .progress-track {
+/* Takip (⭐) ikonu için sol boşluk — her oturum kartında ortak */
+#icsat-pro .ip-session {
+    padding-left: 42px;
+}
+
+#icsat-pro .ip-follow {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, .04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    cursor: pointer;
+    transition: transform .15s ease, background .15s ease;
+}
+#icsat-pro .ip-follow:hover {
+    transform: scale(1.12);
+    background: rgba(0, 0, 0, .08);
+}
+#icsat-pro .ip-session.is-followed {
+    background: linear-gradient(90deg, rgba(124, 58, 237, .07), transparent);
+}
+#icsat-pro .ip-session.is-followed.is-live {
+    background: linear-gradient(90deg, rgba(46, 204, 113, .10), rgba(124, 58, 237, .06));
+}
+
+/* Oturumun bitince salonun sırada ne olduğunu gösteren ipucu (canlı
+   oturum kartının altında görünür — chair'ler ve odayı takip edenler için) */
+#icsat-pro .ip-next {
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px dashed rgba(0, 0, 0, .08);
+    font-size: 10.5px;
+    color: #555;
+}
+#icsat-pro .ip-next b { color: #30206f; }
+
+/* Oturum ilerleme çubuğu (sadece LIVE oturumlarda görünür) — artık
+   üstünde net bir "%kaç tamamlandı · ne kadar kaldı" etiketi var, çubuğun
+   ne anlama geldiği tek bakışta belli oluyor. */
+#icsat-pro .progress-wrap {
     margin-top: 10px;
     margin-right: 90px;
-    height: 5px;
+}
+#icsat-pro .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #27ae60;
+    margin-bottom: 3px;
+    letter-spacing: .3px;
+}
+#icsat-pro .progress-label.ending { color: #d68f1f; }
+
+#icsat-pro .progress-track {
+    margin: 0;
+    height: 6px;
     border-radius: 4px;
     background: #eaf7ef;
     overflow: hidden;
@@ -2294,13 +2352,105 @@
     background: linear-gradient(90deg, #e0a84a, #d68f1f);
 }
 
+/* ================= CHAIR-LED SESSION — MİNİ AJANDA ================= */
+#icsat-pro .ip-chairblock {
+    border-left: 4px solid #0f9b8e;
+    background: linear-gradient(90deg, rgba(15, 155, 142, .06), transparent);
+}
+#icsat-pro .ip-chairblock.is-live {
+    background: linear-gradient(90deg, rgba(46, 204, 113, .09), rgba(15, 155, 142, .05));
+}
+
+/* "Chaired by ..." satırı — soluk kalmasın diye büyütüldü ve koyulaştırıldı */
+#icsat-pro .ip-chairblock .ip-speaker {
+    font-size: 13px;
+    font-weight: 800;
+    color: #0f6b62;
+    margin-top: 3px;
+}
+
+#icsat-pro .chair-agenda {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+/*
+Her ajanda satırı beyaza yakın kendi kartında duruyor — arkadaki
+teal/yeşil zeminle karışıp okunmaz hale gelmesin diye. Düzen iki
+satıra bölünmüş: üstte saat + tip rozeti (ORAL/INVITED vb.) + varsa
+"Now presenting"/"Done" durumu YAN YANA; başlık kendi satırında TAM
+GENİŞLİKTE alta düşüyor — böylece uzun akademik başlıklarda bile üst
+satır kelime kelime sıkışıp kartı dikeyde şişirmiyor.
+
+Durum class'ları bilinçli olarak "state-" önekiyle: sadece
+"upcoming/live/finished" ismini kullansaydık, sayfadaki genel rozet
+renkleriyle (aynı isimli class, örn. .upcoming { background:#3498db })
+çakışıp yanlış renk (mavi) miras alınırdı.
+*/
+#icsat-pro .chair-agenda-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 9px 11px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .92);
+    border: 1px solid rgba(0, 0, 0, .06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+    font-size: 12px;
+    line-height: 1.45;
+}
+#icsat-pro .chair-agenda-item .ca-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+#icsat-pro .chair-agenda-item .ca-time {
+    flex: 0 0 auto;
+    font-weight: 800;
+    color: #a8291d;
+    font-size: 11.5px;
+}
+#icsat-pro .chair-agenda-item .ca-state {
+    margin-left: auto;
+    flex: 0 0 auto;
+    font-size: 10.5px;
+    font-weight: 800;
+    color: #8a8a94;
+    white-space: nowrap;
+}
+#icsat-pro .chair-agenda-item .ca-title {
+    font-weight: 650;
+    color: #1f1f2b;
+}
+#icsat-pro .chair-agenda-item .ca-speaker {
+    display: block;
+    font-weight: 500;
+    color: #52525f;
+    font-size: 11px;
+}
+#icsat-pro .chair-agenda-item.state-now {
+    background: rgba(46, 204, 113, .18);
+    border-color: rgba(46, 204, 113, .35);
+}
+#icsat-pro .chair-agenda-item.state-now .ca-state {
+    color: #17924f;
+}
+#icsat-pro .chair-agenda-item.state-done {
+    background: rgba(0, 0, 0, .03);
+    opacity: .65;
+}
+#icsat-pro .chair-agenda-item.state-done .ca-title { text-decoration: line-through; }
+#icsat-pro .chair-agenda-item.state-done .ca-state { color: #27ae60; }
+
 /* ================= ÇOK SALONLU "ŞU AN CANLI" BANDI ================= */
 #icsat-pro .live-sticky {
     display: none;
     position: sticky;
     top: 12px;
     z-index: 10;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 8px;
     margin: 0 0 20px;
     padding: 10px;
@@ -2312,6 +2462,40 @@
 
 #icsat-pro .live-sticky.show {
     display: flex;
+}
+
+#icsat-pro .live-sticky .sticky-chips,
+#icsat-pro .follow-sticky .sticky-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+#icsat-pro .sticky-heading {
+    display: flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    opacity: .55;
+    padding: 0 2px;
+}
+#icsat-pro .sticky-close {
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 900;
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: .5;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: opacity .15s ease, background .15s ease;
+}
+#icsat-pro .sticky-close:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, .06);
 }
 
 #icsat-pro .live-sticky-chip {
@@ -2352,7 +2536,8 @@
     font-weight: 800;
 }
 
-#icsat-pro .live-sticky-chip .chip-title {
+#icsat-pro .live-sticky-chip .chip-title,
+#icsat-pro .follow-sticky-chip .chip-title {
     max-width: 220px;
     white-space: nowrap;
     overflow: hidden;
@@ -2360,9 +2545,46 @@
 }
 
 @media (max-width: 600px) {
-    #icsat-pro .live-sticky-chip .chip-title {
+    #icsat-pro .live-sticky-chip .chip-title,
+    #icsat-pro .follow-sticky-chip .chip-title {
         max-width: 140px;
     }
+}
+
+/* ================= "TAKİP ETTİKLERİM" BANDI ================= */
+#icsat-pro .follow-sticky {
+    display: none;
+    position: sticky;
+    top: 12px;
+    z-index: 11;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0 0 14px;
+    padding: 10px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .9);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.1);
+}
+#icsat-pro .follow-sticky.show {
+    display: flex;
+}
+#icsat-pro .follow-sticky-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(124, 58, 237, .3);
+    transition: transform .2s ease;
+}
+#icsat-pro .follow-sticky-chip:hover {
+    transform: translateY(-2px);
 }
 
 /* ================= ZOOM ================= */
@@ -2407,7 +2629,7 @@
     padding: 2px 8px;
     font-size: 10px;
     font-weight: 800;
-    background: #2980b9;
+    background: linear-gradient(135deg, #5b9bd8, #8ec2f2);
     color: white;
     border-radius: 10px;
 }
