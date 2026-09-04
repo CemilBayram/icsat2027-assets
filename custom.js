@@ -2,7 +2,7 @@ console.log(
     "%c🔥 ICSAT CUSTOM.JS YENİ SÜRÜM ÇALIŞIYOR 🔥",
     "color:red;font-size:20px;font-weight:bold;"
 );
-console.log("ICSAT ASSETS — v1.1.0");
+console.log("ICSAT ASSETS — v1.1.1");
 
 /*
 ================================================================
@@ -3020,7 +3020,10 @@ function photosThumbUrl(url, size) {
 function photosFullUrl(url) {
     const id = photosExtractDriveId(url);
     if (!id) return url;
-    return `https://drive.google.com/uc?export=view&id=${id}`;
+    // "uc?export=view" formatı Drive tarafında sık sık boş/engellenmiş
+    // dönüyor. Büyük boyutlu "thumbnail" formatı hotlink için çok daha
+    // güvenilir, bu yüzden lightbox'ta da bunu kullanıyoruz.
+    return `https://drive.google.com/thumbnail?id=${id}&sz=w1600`;
 }
 
 async function loadPhotos() {
