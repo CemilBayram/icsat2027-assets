@@ -2,7 +2,7 @@ console.log(
     "%c🔥 ICSAT CUSTOM.JS YENİ SÜRÜM ÇALIŞIYOR 🔥",
     "color:red;font-size:20px;font-weight:bold;"
 );
-console.log("ICSAT ASSETS — v1.1.2");
+console.log("ICSAT ASSETS — v1.1.3");
 
 /*
 ================================================================
@@ -3279,6 +3279,247 @@ const photosTryInterval = setInterval(function () {
     if (photosTryCount >= 20) {
         clearInterval(photosTryInterval);
         console.log("⚠️ Photos container 20 denemede bulunamadı.");
+    }
+
+}, 500);
+
+/*
+================================================================
+ICSAT 2027 — SPONSORS MODÜLÜ (v1.1.3)
+
+Google Sheet "Sponsors" sekmesi beklenen sütunlar:
+
+  Tier          -> "Platinum", "Gold", "Silver", "Bronze", "Supporter" vb.
+  TierOrder     -> Tier'ların gösterilme sırası (sayı, boşsa 0)
+  Name          -> Sponsor / kurum adı
+  LogoURL       -> Google Drive paylaşım linki veya doğrudan görsel URL'i
+  WebsiteURL    -> (opsiyonel) tıklanınca gidilecek adres
+  Order         -> (opsiyonel) aynı tier içindeki sıralama, boşsa 0
+
+Tier adı "Platinum/Gold/Silver/Bronze/Supporter/Partner" ile eşleşirse
+logo boyutu otomatik olarak o tier'a göre kademelenir (CSS tarafında).
+================================================================
+*/
+
+let sponsorsContainer = document.getElementById("icsat-sponsors");
+
+const SPONSORS_API_URL =
+    `${ICSAT_SHEETS_API_URL}?sheet=Sponsors`;
+
+let sponsorsData = [];
+let sponsorsLoadedOnce = false;
+
+async function loadSponsors() {
+
+    if (!sponsorsContainer) return;
+
+    if (!sponsorsLoadedOnce) {
+        sponsorsContainer.innerHTML = `
+            <div class="spo-loading">Loading sponsors…</div>
+        `;
+    }
+
+    try {
+
+        sponsorsData = await icsatFetchJSON(SPONSORS_API_URL);
+
+        if (!Array.isArray(sponsorsData)) {
+            throw new Error("Sponsors API bir liste döndürmedi.");
+        }
+
+        sponsorsLoadedOnce = true;
+
+        sponsorsBuild();
+
+    } catch (err) {
+
+        console.error("Sponsors yüklenemedi:", err);
+
+        sponsorsContainer.innerHTML = `
+            <div class="spo-error">
+                <strong>Sponsors could not be loaded.</strong>
+                <br><br>
+                ${err.message}
+            </div>
+        `;
+    }
+}
+
+/* ================= YARDIMCI: GOOGLE DRIVE ID / LOGO URL ================= */
+
+function sponsorsExtractDriveId(url) {
+
+    if (!url) return null;
+
+    const raw = String(url).trim();
+
+    let match = raw.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (match) return match[1];
+
+    match = raw.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (match) return match[1];
+
+    if (/^[a-zA-Z0-9_-]{20,}$/.test(raw)) return raw;
+
+    return null;
+}
+
+function sponsorsLogoUrl(url) {
+    const id = sponsorsExtractDriveId(url);
+    if (!id) return url;
+    return `https://drive.google.com/thumbnail?id=${id}&sz=w800`;
+}
+
+/* ================= YARDIMCI: TIER SLUG ================= */
+
+function sponsorsTierSlug(tier) {
+    return String(tier || "other")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "") || "other";
+}
+
+/* ================= KART OLUŞTUR ================= */
+
+function sponsorsCreateCard(row) {
+
+    const logo = sponsorsLogoUrl(row.LogoURL);
+    const name = row.Name || "";
+    const hasLink = !!row.WebsiteURL;
+
+    const inner = `
+        <img class="spo-logo" src="${logo}" alt="${name}" loading="lazy">
+        ${!row.LogoURL ? `<div class="spo-name">${name}</div>` : ""}
+    `;
+
+    if (hasLink) {
+        return `
+            <a class="spo-card" href="${row.WebsiteURL}" target="_blank" rel="noopener noreferrer" title="${name}">
+                ${inner}
+            </a>
+        `;
+    }
+
+    return `
+        <div class="spo-card" title="${name}">
+            ${inner}
+        </div>
+    `;
+}
+
+/* ================= BUILD ================= */
+
+function sponsorsBuild() {
+
+    const seenRows = new Set();
+    const rows = sponsorsData.filter(row => {
+        const key = JSON.stringify(row);
+        if (seenRows.has(key)) return false;
+        seenRows.add(key);
+        return true;
+    }).filter(row => row.Name && (row.LogoURL || row.Name));
+
+    if (rows.length === 0) {
+        sponsorsContainer.innerHTML = `
+            <div class="spo-wrap">
+                <div class="spo-empty">No sponsors announced yet.</div>
+            </div>
+        `;
+        return;
+    }
+
+    const groupsMap = {};
+    rows.forEach(row => {
+        const tier = row.Tier || "Sponsors";
+        if (!groupsMap[tier]) {
+            groupsMap[tier] = {
+                order: Number(row.TierOrder) || 0,
+                items: []
+            };
+        }
+        groupsMap[tier].items.push(row);
+    });
+
+    const groups = Object.keys(groupsMap)
+        .map(name => ({
+            name,
+            slug: sponsorsTierSlug(name),
+            order: groupsMap[name].order,
+            items: groupsMap[name].items.sort(
+                (a, b) => (Number(a.Order) || 0) - (Number(b.Order) || 0)
+            )
+        }))
+        .sort((a, b) => a.order - b.order);
+
+    const groupsHtml = groups.map(group => `
+        <div class="spo-group tier-${group.slug}">
+            <h2 class="spo-group-title">${group.name}</h2>
+            <div class="spo-grid">
+                ${group.items.map(sponsorsCreateCard).join("")}
+            </div>
+        </div>
+    `).join("");
+
+    sponsorsContainer.innerHTML = `
+        <div class="spo-wrap">
+            ${groupsHtml}
+        </div>
+    `;
+}
+
+/*
+================================================================
+BAŞLAT SPONSORS (retry destekli sağlam init deseni)
+================================================================
+*/
+
+let sponsorsInitDone = false;
+
+function initSponsors() {
+
+    sponsorsContainer = document.getElementById("icsat-sponsors");
+
+    if (!sponsorsContainer) {
+        return false;
+    }
+
+    console.log("✅ Sponsors container bulundu.");
+
+    if (!sponsorsInitDone) {
+        sponsorsInitDone = true;
+        loadSponsors();
+    }
+
+    return true;
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    initSponsors();
+});
+
+if (window.jQuery) {
+    jQuery(window).on("elementor/frontend/init", function () {
+        console.log("✅ Elementor frontend hazır (sponsors).");
+        setTimeout(initSponsors, 300);
+        setTimeout(initSponsors, 1000);
+        setTimeout(initSponsors, 2000);
+    });
+}
+
+let sponsorsTryCount = 0;
+
+const sponsorsTryInterval = setInterval(function () {
+
+    sponsorsTryCount++;
+
+    if (initSponsors()) {
+        clearInterval(sponsorsTryInterval);
+    }
+
+    if (sponsorsTryCount >= 20) {
+        clearInterval(sponsorsTryInterval);
+        console.log("⚠️ Sponsors container 20 denemede bulunamadı.");
     }
 
 }, 500);
