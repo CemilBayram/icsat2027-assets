@@ -3,6 +3,7 @@
 ICSAT 2027 — MENÜ (Sheets: Menu sekmesi)
 Bu dosyadan ÖNCE custom.js yüklenmiş olmalı (ICSAT_SHEETS_API_URL
 ve icsatFetchJSON buradan geliyor).
+v1.1.7
 ================================================================
 */
 
