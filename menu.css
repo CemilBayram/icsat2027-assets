@@ -3,6 +3,7 @@
 ICSAT 2027 — MENÜ STİLLERİ
 ÖNCE custom.css (.icsat-page/.page-header) yüklenmiş olmalı.
 Scope: #icsat-menu / .icsat-menu
+v1.1.7
 ================================================================
 */
 
@@ -49,17 +50,7 @@ Scope: #icsat-menu / .icsat-menu
   gap: 4px;
   margin: 0;
   padding: 0;
-}
-
-/* Masaüstü/tablet güvenlik önlemi: çok fazla menü kalemi olursa metin
-   kırılıp sıkışmasın diye yatay kaydırmaya izin ver. SADECE hamburger
-   devreye girmeden önceki aralıkta geçerli — mobil bloğu etkilemesin. */
-@media (min-width: 769px) {
-  .icsat-menu-links {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+  flex-wrap: nowrap;
 }
 
 .icsat-menu-item {
