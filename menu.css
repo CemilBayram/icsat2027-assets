@@ -49,9 +49,17 @@ Scope: #icsat-menu / .icsat-menu
   gap: 4px;
   margin: 0;
   padding: 0;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+}
+
+/* Masaüstü/tablet güvenlik önlemi: çok fazla menü kalemi olursa metin
+   kırılıp sıkışmasın diye yatay kaydırmaya izin ver. SADECE hamburger
+   devreye girmeden önceki aralıkta geçerli — mobil bloğu etkilemesin. */
+@media (min-width: 769px) {
+  .icsat-menu-links {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .icsat-menu-item {
@@ -206,6 +214,7 @@ Scope: #icsat-menu / .icsat-menu
     padding: 8px;
     display: none;
     gap: 2px;
+    overflow: visible; /* masaüstü kuralından sızan overflow:auto'yu sıfırla */
   }
 
   .icsat-menu-links.is-open { display: flex; }
