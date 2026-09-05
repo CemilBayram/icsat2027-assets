@@ -70,6 +70,7 @@ Scope: #icsat-menu / .icsat-menu
   font-family: inherit;
   position: relative;
   transition: color 0.2s ease;
+  white-space: nowrap;
 }
 
 /* Hover'da büyüyen alt çizgi */
