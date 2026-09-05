@@ -1,6 +1,6 @@
 /* =========================================================
    ICSAT 2027 — SPEAKERS
-   FINAL CLEAN CSS - V1.1.5
+   FINAL CLEAN CSS - V1.1.6
    ========================================================= */
 
 
@@ -3765,4 +3765,17 @@ renkleriyle (aynı isimli class, örn. .upcoming { background:#3498db })
     #icsat-sponsors .tier-gold .spo-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+}
+
+/* =========================================================
+   MENÜ KONTEYNER TAŞMA DÜZELTMESİ
+   Elementor Flexbox Container (elementor-element-3b03bb1),
+   varsayılan olarak overflow:hidden uyguluyor ve bu da
+   #icsat-menu içindeki mobil dropdown panelini kırpıp
+   kendi içinde kaydırılabilir bir kutuya dönüştürüyordu.
+   Panelin konteyner dışına taşarak tam ekran açılabilmesi
+   için overflow'u zorla görünür yapıyoruz.
+   ========================================================= */
+.elementor-element-3b03bb1 {
+  overflow: visible !important;
 }
