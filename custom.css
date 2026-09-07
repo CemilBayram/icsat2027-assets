@@ -1,6 +1,6 @@
 /* =========================================================
    ICSAT 2027 — SPEAKERS
-   FINAL CLEAN CSS - V1.1.9
+   FINAL CLEAN CSS - V1.2.1
    ========================================================= */
 
 
@@ -2272,14 +2272,14 @@
     border-left: 4px solid #2ecc71;
 }
 
-/* Takip (⭐) ikonu için sol boşluk — her oturum kartında ortak */
+/* Takip (⭐) + Takvime ekle (📅) ikonları için sol boşluk — her oturum kartında ortak */
 #icsat-pro .ip-session {
-    padding-left: 42px;
+    padding-left: 70px;
 }
 
-#icsat-pro .ip-follow {
+#icsat-pro .ip-follow,
+#icsat-pro .ip-cal {
     position: absolute;
-    left: 10px;
     top: 10px;
     width: 24px;
     height: 24px;
@@ -2292,9 +2292,51 @@
     cursor: pointer;
     transition: transform .15s ease, background .15s ease;
 }
-#icsat-pro .ip-follow:hover {
+#icsat-pro .ip-follow { left: 10px; }
+#icsat-pro .ip-cal { left: 38px; font-size: 12px; }
+
+#icsat-pro .ip-follow:hover,
+#icsat-pro .ip-cal:hover {
     transform: scale(1.12);
     background: rgba(0, 0, 0, .08);
+}
+
+/* 📅 ikonuna tıklayınca açılan küçük seçim kutusu (Google Calendar / .ics) */
+#icsat-pro .ip-cal-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    min-width: 168px;
+    background: #ffffff;
+    border: 1px solid #e7eaf0;
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(48, 32, 111, .16);
+    padding: 6px;
+    cursor: default;
+}
+#icsat-pro .ip-cal-popover a,
+#icsat-pro .ip-cal-popover button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #30206f;
+    text-decoration: none;
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+#icsat-pro .ip-cal-popover a:hover,
+#icsat-pro .ip-cal-popover button:hover {
+    background: #f1f3f7;
 }
 #icsat-pro .ip-session.is-followed {
     background: linear-gradient(90deg, rgba(124, 58, 237, .07), transparent);
@@ -2471,6 +2513,17 @@ renkleriyle (aynı isimli class, örn. .upcoming { background:#3498db })
     gap: 8px;
 }
 
+/* ⭐ bandında başlık (düşük opaklıklı küçük etiket) ile "⬇ My Schedule"
+   butonunu (tam opaklıkta, dikkat çekmesi gereken bir aksiyon) aynı satırda
+   ama BİRBİRİNDEN BAĞIMSIZ opaklıkla tutmak için ayrı bir satır sarmalayıcı.
+   (.sticky-heading'in kendi opacity:.55'i, içine konan öğeleri de soldurur —
+   bu yüzden buton .sticky-heading'in DIŞINA, bu satırın içine alındı.) */
+#icsat-pro .sticky-heading-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 #icsat-pro .sticky-heading {
     display: flex;
     align-items: center;
@@ -2481,6 +2534,27 @@ renkleriyle (aynı isimli class, örn. .upcoming { background:#3498db })
     opacity: .55;
     padding: 0 2px;
 }
+/* Bookmarked sessions bandındaki toplu takvim indirme butonu */
+#icsat-pro .icsat-schedule-dl-btn {
+    margin-left: auto;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .3px;
+    text-transform: none;
+    color: #ffffff;
+    background: linear-gradient(90deg, #30206f, #5f7cff);
+    border: none;
+    border-radius: 999px;
+    padding: 6px 12px;
+    cursor: pointer;
+    opacity: 1;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+#icsat-pro .icsat-schedule-dl-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(48, 32, 111, .3);
+}
+
 #icsat-pro .sticky-close {
     margin-left: auto;
     font-size: 13px;
