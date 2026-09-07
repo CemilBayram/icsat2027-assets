@@ -1,6 +1,6 @@
 /* =========================================================
    ICSAT 2027 — SPEAKERS
-   FINAL CLEAN CSS - V1.2.2
+   FINAL CLEAN CSS - V1.2.3
    ========================================================= */
 
 
@@ -3983,5 +3983,83 @@ renkleriyle (aynı isimli class, örn. .upcoming { background:#3498db })
     #icsat-abstract-banner .abs-banner-btn {
         width: 100%;
         justify-content: center;
+    }
+}
+
+/* =========================================================
+   ICSAT 2027 — PROGRAM SAYFASI KULLANIM REHBERİ
+   V1.2.2
+
+   Program sayfasının en üstüne (page-header ile #icsat-pro
+   arasına) eklenecek statik açıklama kutusu. Sheets'e bağlı
+   değil, saf HTML/CSS — Elementor HTML widget içine aşağıdaki
+   HTML parçası yapıştırılarak kullanılır:
+
+   <div id="icsat-program-guide">
+       <div class="pg-item">
+           <div class="pg-icon">⭐</div>
+           <div class="pg-text"><b>Bookmark a session</b> — tap the star on any session card to save it. Your picks are stored on this device and automatically appear together at the top, under "Your Bookmarked Sessions".</div>
+       </div>
+       <div class="pg-item">
+           <div class="pg-icon">📅</div>
+           <div class="pg-text"><b>Add to your calendar</b> — tap the calendar icon on any session to add it to Google Calendar, or download an .ics file for Apple Calendar / Outlook.</div>
+       </div>
+       <div class="pg-item">
+           <div class="pg-icon">🔴</div>
+           <div class="pg-text"><b>"Live Now" bar</b> — whenever a session is running in any room, a red banner appears at the top of the schedule. Tap it to jump straight to that session.</div>
+       </div>
+       <div class="pg-item">
+           <div class="pg-icon">⬇</div>
+           <div class="pg-text"><b>Download your full schedule</b> — once you've bookmarked your sessions, use the "My Schedule" button in the bookmarked bar to export all of them at once as a single calendar file.</div>
+       </div>
+   </div>
+   ========================================================= */
+
+#icsat-program-guide {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    width: 100%;
+    margin: 0 0 40px;
+    padding: 20px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(48, 32, 111, .05), rgba(95, 124, 255, .05));
+    border: 1px solid rgba(48, 32, 111, .1);
+}
+
+#icsat-program-guide .pg-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+#icsat-program-guide .pg-icon {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 3px 10px rgba(48, 32, 111, .12);
+}
+
+#icsat-program-guide .pg-text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #3a3a3a;
+}
+
+#icsat-program-guide .pg-text b {
+    color: #30206f;
+}
+
+@media (max-width: 780px) {
+    #icsat-program-guide {
+        grid-template-columns: 1fr;
+        padding: 16px;
+        margin-bottom: 28px;
     }
 }
