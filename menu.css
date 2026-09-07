@@ -89,20 +89,57 @@ v1.1.8
   transition: transform 0.25s ease;
 }
 
-.icsat-menu-link:hover {
-  color: #5f7cff;
+/* .icsat-menu-parent bir <button> elementi olduğu için tarayıcı/tema
+   varsayılan buton görünümünü (appearance, outline, tema accent rengi
+   vb.) sıfırlıyoruz — aksi halde WordPress temasının varsayılan buton
+   hover/focus stilleri (genelde pembe/kırmızı tonlarda) araya sızabiliyor. */
+.icsat-menu-parent {
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  box-shadow: none;
+}
+
+/* Sadece ÜST SEVİYE menü linkleri/butonu için hover-focus resetleniyor.
+   .icsat-submenu içindeki linklere bilerek dokunmuyoruz — onların kendi
+   hover arkaplanı (#f1f3f7) aşağıda ayrıca tanımlı. */
+.icsat-menu-links > .icsat-menu-item > .icsat-menu-link:hover,
+.icsat-menu-links > .icsat-menu-item > .icsat-menu-link:focus,
+.icsat-menu-links > .icsat-menu-item > .icsat-menu-link:focus-visible,
+.icsat-menu-links > .icsat-menu-item > .icsat-menu-parent:hover,
+.icsat-menu-links > .icsat-menu-item > .icsat-menu-parent:focus,
+.icsat-menu-links > .icsat-menu-item > .icsat-menu-parent:focus-visible {
+  color: #5f7cff !important;
+  background: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  border: none !important;
 }
 
 .icsat-menu-link:hover::after {
   transform: scaleX(1);
 }
 
-.icsat-menu-link.is-active {
-  color: #ffffff;
+/* ---- Aktif sayfa / aktif üst menü ---- */
+.icsat-menu-link.is-active,
+.icsat-menu-item.is-active-parent > .icsat-menu-parent {
+  color: #ffffff !important;
+  background: linear-gradient(90deg, #30206f, #5f7cff) !important;
+  border-radius: 10px;
 }
 
-.icsat-menu-link.is-active::after {
-  transform: scaleX(1);
+.icsat-menu-link.is-active::after,
+.icsat-menu-item.is-active-parent > .icsat-menu-parent::after {
+  display: none;
+}
+
+/* Aktif link'in üzerine gelindiğinde de okunaklı kalsın */
+.icsat-menu-link.is-active:hover,
+.icsat-menu-link.is-active:focus,
+.icsat-menu-item.is-active-parent > .icsat-menu-parent:hover,
+.icsat-menu-item.is-active-parent > .icsat-menu-parent:focus {
+  color: #ffffff !important;
+  background: linear-gradient(90deg, #30206f, #5f7cff) !important;
 }
 
 .icsat-menu-chevron {
@@ -111,14 +148,6 @@ v1.1.8
 
 .has-submenu.is-open > .icsat-menu-parent .icsat-menu-chevron {
   transform: rotate(180deg);
-}
-
-.icsat-menu-item.is-active-parent > .icsat-menu-parent {
-  color: #ffffff;
-}
-
-.icsat-menu-item.is-active-parent > .icsat-menu-parent::after {
-  transform: scaleX(1);
 }
 
 /* ---- Alt menü (dropdown) paneli ---- */
