@@ -98,7 +98,7 @@ v1.1.8
 }
 
 .icsat-menu-link.is-active {
-  color: #30206f;
+  color: #ffffff;
 }
 
 .icsat-menu-link.is-active::after {
@@ -114,7 +114,7 @@ v1.1.8
 }
 
 .icsat-menu-item.is-active-parent > .icsat-menu-parent {
-  color: #30206f;
+  color: #ffffff;
 }
 
 .icsat-menu-item.is-active-parent > .icsat-menu-parent::after {
