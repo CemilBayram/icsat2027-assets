@@ -2,7 +2,7 @@ console.log(
     "%c🔥 ICSAT CUSTOM.JS YENİ SÜRÜM ÇALIŞIYOR 🔥",
     "color:red;font-size:20px;font-weight:bold;"
 );
-console.log("ICSAT ASSETS — v1.1.9");
+console.log("ICSAT ASSETS — v1.2.1");
 
 /*
 ================================================================
@@ -1409,6 +1409,7 @@ function programCreateSession(session, iso, nextItem) {
 
     el.innerHTML = `
         <div class="ip-follow" title="Follow / unfollow this session" data-follow-id="${sessionId}">${isFollowed ? "⭐" : "☆"}</div>
+        <div class="ip-cal" title="Add to calendar" data-cal-id="${sessionId}">📅</div>
         <div class="ip-time">${session.start} - ${session.end}</div>
         <div class="ip-title2">${typeBadge} ${session.title || ""}</div>
         <div class="ip-speaker">${speakerBadge} ${session.speaker || ""}</div>
@@ -1519,6 +1520,7 @@ function programCreateChairBlock(chair, talks, iso, nextItem) {
 
     el.innerHTML = `
         <div class="ip-follow" title="Follow / unfollow this session" data-follow-id="${sessionId}">${isFollowed ? "⭐" : "☆"}</div>
+        <div class="ip-cal" title="Add to calendar" data-cal-id="${sessionId}">📅</div>
         <div class="ip-time">${chair.start} - ${chair.end}</div>
         <div class="ip-title2"><span class="chair-badge">🎤 CHAIR-LED SESSION</span> ${chair.title || ""}</div>
         <div class="ip-speaker">Chaired by ${chair.speaker || ""}</div>
@@ -1692,7 +1694,14 @@ function programCollectStickyLists() {
     const followedList = [];
 
     programContainer.querySelectorAll(".ip-session[id]").forEach(el => {
-        const info = { room: el.dataset.room || "", title: el.dataset.title || "", elId: el.id };
+        const info = {
+            room: el.dataset.room || "",
+            title: el.dataset.title || "",
+            elId: el.id,
+            iso: el.dataset.iso || "",
+            start: el.dataset.start || "",
+            end: el.dataset.end || ""
+        };
         if (el.classList.contains("is-live")) liveList.push(info);
         if (programFollowedIds.has(el.id)) followedList.push(info);
     });
@@ -1774,7 +1783,10 @@ function programUpdateFollowSticky(followedSessions) {
 
     sticky.classList.add("show");
     sticky.innerHTML = `
-        <div class="sticky-heading">⭐ Your Bookmarked Sessions</div>
+        <div class="sticky-heading-row">
+            <div class="sticky-heading">⭐ Your Bookmarked Sessions</div>
+            <button class="icsat-schedule-dl-btn" id="icsatScheduleDlBtn" title="Download all bookmarked sessions as a calendar file (.ics)">⬇ My Schedule</button>
+        </div>
         <div class="sticky-chips">
             ${followedSessions.map(s => `
                 <div class="follow-sticky-chip" onclick="document.getElementById('${s.elId}')?.scrollIntoView({behavior:'smooth', block:'center'})">
@@ -1785,11 +1797,180 @@ function programUpdateFollowSticky(followedSessions) {
             `).join("")}
         </div>
     `;
+
+    // "⬇ My Schedule" — takip edilen tüm oturumları tek bir .ics dosyası
+    // olarak indirir (Outlook/Apple Calendar/Google Calendar import).
+    const dlBtn = document.getElementById("icsatScheduleDlBtn");
+    if (dlBtn) {
+        dlBtn.addEventListener("click", () => {
+            const events = followedSessions
+                .map(icsatSessionInfoToEvent)
+                .filter(Boolean);
+
+            if (events.length === 0) return;
+
+            icsatDownloadICS(events, "icsat2027-my-schedule.ics");
+        });
+    }
 }
 
 // ⭐/☆ ikonuna tıklanınca takip et/bırak — event delegation ile TEK bir
 // listener, çünkü kartlar her 20 saniyede bir yeniden çiziliyor ve
 // tek tek her yıldıza listener bağlamak gereksiz/kırılgan olurdu.
+/*
+================================================================
+ICSAT 2027 — ADD TO CALENDAR (Google Calendar + .ics)
+
+Program modülündeki .ip-session kartlarının (hem normal oturumlar
+hem Chair-led blokları) zaten sahip olduğu data-iso / data-start /
+data-end / data-room / data-title bilgilerini kullanır. Sheets
+şemasında ve kod.gs'de HİÇBİR değişiklik gerekmiyor — tamamen
+frontend'de üretiliyor.
+================================================================
+*/
+
+const ICSAT_TZ_OFFSET = "+03:00"; // Erzurum — programın canlı-durum hesaplarıyla aynı varsayım
+
+// "2027-05-05" + "09:30" -> "20270505T063000Z" (UTC'ye çevrilmiş ICS/Google formatı)
+function icsatToUTCStamp(isoDate, timeStr) {
+    if (!isoDate || !timeStr) return null;
+    const d = new Date(`${isoDate}T${timeStr}:00${ICSAT_TZ_OFFSET}`);
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+}
+
+function icsatEscapeICS(str) {
+    return String(str || "")
+        .replace(/\\/g, "\\\\")
+        .replace(/;/g, "\\;")
+        .replace(/,/g, "\\,")
+        .replace(/\n/g, "\\n");
+}
+
+// {iso, start, end, room, title, uid} -> takvim event objesi
+function icsatBuildEvent(fields) {
+    const startStamp = icsatToUTCStamp(fields.iso, fields.start);
+    const endStamp = icsatToUTCStamp(fields.iso, fields.end || fields.start);
+    if (!startStamp || !endStamp) return null;
+
+    return {
+        uid: fields.uid || `${startStamp}-${Math.random().toString(36).slice(2)}`,
+        title: fields.title || "ICSAT 2027 Session",
+        location: fields.room ? `${fields.room}, Atatürk University, Erzurum` : "Atatürk University, Erzurum",
+        description: "ICSAT 2027 — icsat2027.atauni.edu.tr",
+        startStamp,
+        endStamp
+    };
+}
+
+// programCollectStickyLists()'ten gelen {iso, start, end, room, title, elId} -> event
+function icsatSessionInfoToEvent(info) {
+    return icsatBuildEvent({
+        iso: info.iso, start: info.start, end: info.end,
+        room: info.room, title: info.title, uid: info.elId
+    });
+}
+
+// Bir .ip-session DOM elementinin dataset'inden event üretir
+function icsatSessionElToEvent(el) {
+    if (!el) return null;
+    return icsatBuildEvent({
+        iso: el.dataset.iso, start: el.dataset.start, end: el.dataset.end,
+        room: el.dataset.room, title: el.dataset.title, uid: el.id
+    });
+}
+
+function icsatBuildVEVENT(ev) {
+    const now = new Date();
+    const stampNow = now.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    return [
+        "BEGIN:VEVENT",
+        `UID:${ev.uid}@icsat2027.atauni.edu.tr`,
+        `DTSTAMP:${stampNow}`,
+        `DTSTART:${ev.startStamp}`,
+        `DTEND:${ev.endStamp}`,
+        `SUMMARY:${icsatEscapeICS(ev.title)}`,
+        `LOCATION:${icsatEscapeICS(ev.location)}`,
+        `DESCRIPTION:${icsatEscapeICS(ev.description)}`,
+        "END:VEVENT"
+    ].join("\r\n");
+}
+
+function icsatDownloadICS(events, filename) {
+    const body = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//ICSAT 2027//Program//EN",
+        "CALSCALE:GREGORIAN",
+        ...events.map(icsatBuildVEVENT),
+        "END:VCALENDAR"
+    ].join("\r\n");
+
+    const blob = new Blob([body], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename || "icsat2027-session.ics";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function icsatGoogleCalUrl(ev) {
+    const params = new URLSearchParams({
+        action: "TEMPLATE",
+        text: ev.title,
+        dates: `${ev.startStamp}/${ev.endStamp}`,
+        location: ev.location,
+        details: ev.description
+    });
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+function icsatCloseCalPopover() {
+    const existing = document.querySelector(".ip-cal-popover");
+    if (existing) existing.remove();
+    document.querySelectorAll(".ip-cal").forEach(el => delete el.dataset.popoverOpen);
+}
+
+function programHandleCalClick(e) {
+    const icon = e.target.closest(".ip-cal");
+
+    if (!icon) {
+        icsatCloseCalPopover();
+        return;
+    }
+
+    if (!programContainer || !programContainer.contains(icon)) return;
+
+    const alreadyOpenForThisIcon = icon.dataset.popoverOpen === "1";
+    icsatCloseCalPopover(); // her tıklamada önce mevcut popover'ı ve flag'leri temizle
+
+    if (alreadyOpenForThisIcon) return; // toggle: aynı ikona tekrar tıklayınca sadece kapat
+
+    const sessionEl = icon.closest(".ip-session");
+    const ev = icsatSessionElToEvent(sessionEl);
+    if (!ev) return;
+
+    icon.dataset.popoverOpen = "1";
+
+    const popover = document.createElement("div");
+    popover.className = "ip-cal-popover";
+    popover.innerHTML = `
+        <a href="${icsatGoogleCalUrl(ev)}" target="_blank" rel="noopener noreferrer">Google Calendar</a>
+        <button type="button" data-ics-download="1">Apple / Outlook (.ics)</button>
+    `;
+
+    popover.querySelector("[data-ics-download]").addEventListener("click", () => {
+        icsatDownloadICS([ev], `icsat2027-${ev.uid}.ics`);
+        icsatCloseCalPopover();
+    });
+
+    icon.style.position = "relative";
+    icon.appendChild(popover);
+}
+
 function programHandleFollowClick(e) {
     const star = e.target.closest(".ip-follow");
     if (!star || !programContainer || !programContainer.contains(star)) return;
@@ -1825,6 +2006,11 @@ function initProgram() {
     if (!programInitDone) {
         programInitDone = true;
         programContainer.addEventListener("click", programHandleFollowClick); // ⭐ takip tıklamaları
+        programContainer.addEventListener("click", programHandleCalClick);    // 📅 takvime ekle
+        document.addEventListener("click", (e) => {
+            // Popover'ın kendisine veya açan ikona tıklanmadıysa kapat
+            if (!e.target.closest(".ip-cal")) icsatCloseCalPopover();
+        });
         loadProgram();
         setInterval(loadProgram, 60000);       // tam veri yenilemesi (Sheets'ten)
         setInterval(programRefreshBadges, 20000); // görünümü tazele (veri çekmez)
