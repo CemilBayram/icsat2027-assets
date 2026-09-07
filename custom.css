@@ -1,6 +1,6 @@
 /* =========================================================
    ICSAT 2027 — SPEAKERS
-   FINAL CLEAN CSS - V1.2.3
+   FINAL CLEAN CSS - V1.2.4
    ========================================================= */
 
 
@@ -3856,13 +3856,19 @@ renkleriyle (aynı isimli class, örn. .upcoming { background:#3498db })
 }
 
 /* =========================================================
-   ICSAT 2027 — ABSTRACT BOOK BANNER
-   V1.1.8
+   ICSAT 2027 — GENEL DUYURU ŞERİDİ (ANNOUNCEMENTS BANNER)
+   V1.2.4
 
    Not: #icsat-abstract-banner varsayılan olarak JS tarafından
    display:none yapılır ve yalnızca Google Sheets'teki
-   "Announcements" sekmesinde Key=AbstractBook satırının URL
-   sütunu doludur ise görünür hale getirilir.
+   "Announcements" sekmesinde Active=TRUE olan en az bir satır
+   varsa görünür hale getirilir. Birden fazla aktif satır varsa
+   altta dot (nokta) göstergeleriyle carousel olarak döner.
+
+   NOT: Container ID'si eski "Abstract Book" modülünden miras
+   kalmıştır ("icsat-abstract-banner"), Elementor'da değişiklik
+   gerekmemesi için bilerek değiştirilmemiştir. Artık genel
+   amaçlı bir duyuru şeridi olarak çalışır.
    ========================================================= */
 
 #icsat-abstract-banner {
@@ -3900,6 +3906,40 @@ renkleriyle (aynı isimli class, örn. .upcoming { background:#3498db })
     box-shadow: 0 8px 24px rgba(15, 118, 110, 0.25);
     position: relative;
     overflow: hidden;
+    animation: absSlideFadeIn 0.4s ease;
+}
+
+@keyframes absSlideFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Birden fazla aktif duyuru olduğunda görünen nokta göstergeleri */
+#icsat-abstract-banner .abs-banner-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+#icsat-abstract-banner .abs-banner-dot {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+    cursor: pointer;
+    transition: background 0.25s ease, transform 0.25s ease;
+}
+
+#icsat-abstract-banner .abs-banner-dot:hover {
+    background: rgba(255, 255, 255, 0.6);
+}
+
+#icsat-abstract-banner .abs-banner-dot.is-active {
+    background: var(--abs-accent);
+    transform: scale(1.2);
 }
 
 #icsat-abstract-banner .abs-banner-inner::before {
