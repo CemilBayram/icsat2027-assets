@@ -3779,3 +3779,134 @@ renkleriyle (aynı isimli class, örn. .upcoming { background:#3498db })
 .elementor-element-3b03bb1 {
   overflow: visible !important;
 }
+
+/* =========================================================
+   ICSAT 2027 — ABSTRACT BOOK BANNER
+   V1.1.8
+
+   Not: #icsat-abstract-banner varsayılan olarak JS tarafından
+   display:none yapılır ve yalnızca Google Sheets'teki
+   "Announcements" sekmesinde Key=AbstractBook satırının URL
+   sütunu doludur ise görünür hale getirilir.
+   ========================================================= */
+
+#icsat-abstract-banner {
+    --abs-bg-start: #0f766e;
+    --abs-bg-end: #134e4a;
+    --abs-accent: #facc15;
+    --abs-text: #ffffff;
+    --abs-subtext: rgba(255, 255, 255, 0.85);
+
+    display: none;
+    width: 100%;
+    max-width: 1380px;
+    margin: 0 auto 28px;
+    padding: 0 24px;
+    box-sizing: border-box;
+    opacity: 0;
+    transform: translateY(-12px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+#icsat-abstract-banner.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#icsat-abstract-banner .abs-banner-inner {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    background: linear-gradient(135deg, var(--abs-bg-start), var(--abs-bg-end));
+    border: 1px solid rgba(250, 204, 21, 0.35);
+    border-radius: 16px;
+    padding: 18px 26px;
+    box-shadow: 0 8px 24px rgba(15, 118, 110, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+#icsat-abstract-banner .abs-banner-inner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 15% 50%, rgba(250, 204, 21, 0.12), transparent 55%);
+    pointer-events: none;
+}
+
+#icsat-abstract-banner .abs-banner-badge {
+    flex: 0 0 auto;
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    background: rgba(250, 204, 21, 0.16);
+    border-radius: 50%;
+    animation: absBadgePulse 2.4s ease-in-out infinite;
+}
+
+@keyframes absBadgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+}
+
+#icsat-abstract-banner .abs-banner-text {
+    flex: 1 1 260px;
+    min-width: 0;
+}
+
+#icsat-abstract-banner .abs-banner-title {
+    color: var(--abs-text);
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+#icsat-abstract-banner .abs-banner-subtitle {
+    color: var(--abs-subtext);
+    font-size: 0.92rem;
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
+#icsat-abstract-banner .abs-banner-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--abs-accent);
+    color: #1c1917;
+    font-weight: 700;
+    font-size: 0.92rem;
+    text-decoration: none;
+    padding: 11px 20px;
+    border-radius: 999px;
+    white-space: nowrap;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#icsat-abstract-banner .abs-banner-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(250, 204, 21, 0.4);
+}
+
+@media (max-width: 640px) {
+    #icsat-abstract-banner {
+        padding: 0 16px;
+        margin-bottom: 20px;
+    }
+
+    #icsat-abstract-banner .abs-banner-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 18px 20px;
+    }
+
+    #icsat-abstract-banner .abs-banner-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
