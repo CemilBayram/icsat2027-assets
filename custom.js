@@ -2,7 +2,7 @@ console.log(
     "%c🔥 ICSAT CUSTOM.JS YENİ SÜRÜM ÇALIŞIYOR 🔥",
     "color:red;font-size:20px;font-weight:bold;"
 );
-console.log("ICSAT ASSETS — v1.2.3");
+console.log("ICSAT ASSETS — v1.2.4");
 
 /*
 ================================================================
@@ -3712,71 +3712,172 @@ const sponsorsTryInterval = setInterval(function () {
 
 /*
 ================================================================
-ICSAT 2027 — ABSTRACT BOOK BANNER MODÜLÜ (v1.1.8)
+ICSAT 2027 — GENEL DUYURU ŞERİDİ / ANNOUNCEMENTS BANNER MODÜLÜ (v1.2.4)
+
+Bu modül eski tekil "Abstract Book Banner" modülünün yerini alır.
+Aynı container'ı (#icsat-abstract-banner) ve aynı Google Sheet
+sekmesini ("Announcements") kullanmaya devam eder — Elementor'da
+HİÇBİR DEĞİŞİKLİK GEREKMEZ. Fark: artık sadece Key="AbstractBook"
+satırını değil, sheet'teki TÜM satırları okur ve Active sütunu
+TRUE olan her satırı sırayla (birden fazlaysa carousel ile) gösterir.
 
 Google Sheet "Announcements" sekmesi beklenen sütunlar:
-  Key         -> banner tipini ayırt eden anahtar. Bu modül
-                 sadece Key = "AbstractBook" olan satırı okur
-                 (ileride aynı sheet'e başka Key değerleriyle
-                 başka duyuru banner'ları eklenebilir).
+  Key         -> serbest metin, sadece tanımlayıcı/loglama amaçlı.
+                 Görünürlük mantığı ARTIK buna bağlı DEĞİL.
+                 (Örn. "AbstractBook", "DeadlineExtended",
+                 "EarlyBirdLastDay" gibi istediğin adı verebilirsin.)
+  Active      -> TRUE / FALSE (Evet/Hayır, Yes/No, 1/0 de kabul
+                 edilir). SADECE Active = TRUE olan satırlar
+                 gösterilir. Hiçbir satırda Active=TRUE yoksa
+                 şerit TAMAMEN GİZLENİR.
   Title       -> büyük başlık, örn. "Abstract Book Published"
   Subtitle    -> (opsiyonel) alt açıklama metni
-  URL         -> Abstract Book dosyasının (Drive/PDF) linki.
-                 BU SÜTUN BOŞSA BANNER TAMAMEN GİZLİ KALIR.
-  ButtonText  -> (opsiyonel) buton metni, boşsa
-                 "Download Abstract Book" kullanılır.
+  URL         -> (opsiyonel) dolu ise buton görünür ve tıklanabilir
+                 olur. Boşsa buton hiç render edilmez (salt bilgi
+                 duyurusu olarak kullanılabilir).
+  ButtonText  -> (opsiyonel) buton metni. URL doluysa ve bu
+                 sütun boşsa "Learn More" kullanılır.
+  Icon        -> (opsiyonel) emoji/simge, boşsa 📣 kullanılır.
+  Order       -> (opsiyonel) sayı; küçükten büyüğe sıralanır.
+                 Boş bırakılırsa sheet'teki satır sırası kullanılır.
 
-Sadece URL sütunu doldurulduğunda banner otomatik olarak
-görünür olur — kod veya deploy değişikliği gerekmez.
+Davranış:
+  - 0 aktif satır  -> şerit tamamen gizli (display:none)
+  - 1 aktif satır  -> sabit (carousel'siz) tek banner
+  - 2+ aktif satır -> üstte otomatik dönen carousel (6 sn'de bir
+                      fade ile bir sonraki duyuruya geçer) + altta
+                      küçük nokta (dot) göstergeleri, tıklanabilir
+
+Yeni bir duyuru eklemek için TEK yapılması gereken: Sheet'e yeni
+bir satır eklemek ve Active sütununa TRUE yazmak. Kod veya deploy
+değişikliği GEREKMEZ. Bir duyuruyu kaldırmak için Active'i FALSE
+yapman veya satırı silmen yeterli.
 ================================================================
 */
 
-let abstractBannerContainer = document.getElementById("icsat-abstract-banner");
+let announcementsContainer = document.getElementById("icsat-abstract-banner");
 
 const ANNOUNCEMENTS_API_URL =
     `${ICSAT_SHEETS_API_URL}?sheet=Announcements`;
 
-let abstractBannerLoadedOnce = false;
+let announcementsLoadedOnce = false;
+let announcementsRotateInterval = null;
+let announcementsActiveIndex = 0;
+let announcementsCurrentRows = [];
 
-function abstractBannerHide() {
-    if (!abstractBannerContainer) return;
-    abstractBannerContainer.innerHTML = "";
-    abstractBannerContainer.classList.remove("is-visible");
-    abstractBannerContainer.style.display = "none";
+function announcementsIsTruthy(value) {
+    const v = String(value || "").trim().toLowerCase();
+    return ["true", "1", "evet", "yes", "aktif", "active"].includes(v);
 }
 
-function abstractBannerShow(row) {
-    if (!abstractBannerContainer) return;
+function announcementsStopRotation() {
+    if (announcementsRotateInterval) {
+        clearInterval(announcementsRotateInterval);
+        announcementsRotateInterval = null;
+    }
+}
 
-    const title = row.Title || "Abstract Book Published";
+function announcementsHide() {
+    if (!announcementsContainer) return;
+    announcementsStopRotation();
+    announcementsContainer.innerHTML = "";
+    announcementsContainer.classList.remove("is-visible");
+    announcementsContainer.style.display = "none";
+    announcementsCurrentRows = [];
+}
+
+function announcementsBuildSlideHTML(row) {
+    const title = row.Title || "";
     const subtitle = row.Subtitle || "";
-    const buttonText = row.ButtonText || "Download Abstract Book";
+    const icon = row.Icon || "📣";
+    const url = String(row.URL || "").trim();
+    const buttonText = row.ButtonText || "Learn More";
 
-    abstractBannerContainer.innerHTML = `
-        <div class="abs-banner-inner">
-            <div class="abs-banner-badge">📖</div>
-            <div class="abs-banner-text">
-                <div class="abs-banner-title">${title}</div>
-                ${subtitle ? `<div class="abs-banner-subtitle">${subtitle}</div>` : ""}
-            </div>
-            <a class="abs-banner-btn"
-               href="${row.URL}"
+    const buttonHTML = url
+        ? `<a class="abs-banner-btn"
+               href="${url}"
                target="_blank"
                rel="noopener noreferrer">
                 ${buttonText} <span aria-hidden="true">↓</span>
-            </a>
-        </div>
-    `;
+            </a>`
+        : "";
 
-    abstractBannerContainer.style.display = "block";
-    // reflow tetikleyip animasyonun her seferinde çalışmasını sağla
-    void abstractBannerContainer.offsetWidth;
-    abstractBannerContainer.classList.add("is-visible");
+    return `
+        <div class="abs-banner-badge">${icon}</div>
+        <div class="abs-banner-text">
+            <div class="abs-banner-title">${title}</div>
+            ${subtitle ? `<div class="abs-banner-subtitle">${subtitle}</div>` : ""}
+        </div>
+        ${buttonHTML}
+    `;
 }
 
-async function loadAbstractBanner() {
+function announcementsRenderDots() {
+    if (announcementsCurrentRows.length < 2) return "";
 
-    if (!abstractBannerContainer) return;
+    const dots = announcementsCurrentRows
+        .map((_, i) => `<button type="button" class="abs-banner-dot${i === announcementsActiveIndex ? " is-active" : ""}" data-idx="${i}" aria-label="Announcement ${i + 1}"></button>`)
+        .join("");
+
+    return `<div class="abs-banner-dots">${dots}</div>`;
+}
+
+function announcementsRenderCurrent() {
+    if (!announcementsContainer || announcementsCurrentRows.length === 0) return;
+
+    const row = announcementsCurrentRows[announcementsActiveIndex];
+
+    announcementsContainer.innerHTML = `
+        <div class="abs-banner-inner">
+            ${announcementsBuildSlideHTML(row)}
+        </div>
+        ${announcementsRenderDots()}
+    `;
+
+    announcementsContainer.querySelectorAll(".abs-banner-dot").forEach(dot => {
+        dot.addEventListener("click", function () {
+            announcementsActiveIndex = parseInt(this.getAttribute("data-idx"), 10) || 0;
+            announcementsRenderCurrent();
+            announcementsRestartRotation();
+        });
+    });
+
+    announcementsContainer.style.display = "block";
+    // reflow tetikleyip animasyonun her seferinde çalışmasını sağla
+    void announcementsContainer.offsetWidth;
+    announcementsContainer.classList.add("is-visible");
+}
+
+function announcementsRestartRotation() {
+    announcementsStopRotation();
+
+    if (announcementsCurrentRows.length < 2) return;
+
+    announcementsRotateInterval = setInterval(function () {
+        announcementsActiveIndex =
+            (announcementsActiveIndex + 1) % announcementsCurrentRows.length;
+        announcementsRenderCurrent();
+    }, 6000);
+}
+
+function announcementsShow(rows) {
+    if (!announcementsContainer) return;
+
+    announcementsCurrentRows = rows;
+
+    // Sheet'te güncelleme geldiyse (satır eklendi/çıkarıldı) index'in
+    // sınırlar dışına taşmasını engelle
+    if (announcementsActiveIndex >= rows.length) {
+        announcementsActiveIndex = 0;
+    }
+
+    announcementsRenderCurrent();
+    announcementsRestartRotation();
+}
+
+async function loadAnnouncements() {
+
+    if (!announcementsContainer) return;
 
     try {
 
@@ -3786,94 +3887,103 @@ async function loadAbstractBanner() {
             throw new Error("Announcements API bir liste döndürmedi.");
         }
 
-        abstractBannerLoadedOnce = true;
+        announcementsLoadedOnce = true;
 
-        const row = data.find(r =>
-            String(r.Key || "").trim().toLowerCase() === "abstractbook"
-        );
+        const activeRows = data
+            .filter(r => announcementsIsTruthy(r.Active))
+            .sort((a, b) => {
+                const orderA = parseFloat(a.Order);
+                const orderB = parseFloat(b.Order);
+                const hasOrderA = !isNaN(orderA);
+                const hasOrderB = !isNaN(orderB);
+                if (hasOrderA && hasOrderB) return orderA - orderB;
+                if (hasOrderA) return -1;
+                if (hasOrderB) return 1;
+                return 0;
+            });
 
-        if (row && String(row.URL || "").trim() !== "") {
-            abstractBannerShow(row);
+        if (activeRows.length > 0) {
+            announcementsShow(activeRows);
         } else {
-            abstractBannerHide();
+            announcementsHide();
         }
 
     } catch (err) {
 
-        console.error("Abstract Book banner yüklenemedi:", err);
+        console.error("Duyuru şeridi yüklenemedi:", err);
 
-        // Hata durumunda banner'ı sessizce gizli tut (kullanıcıya
+        // Hata durumunda şeridi sessizce gizli tut (kullanıcıya
         // bozuk/boş bir kutu göstermemek için)
-        if (!abstractBannerLoadedOnce) {
-            abstractBannerHide();
+        if (!announcementsLoadedOnce) {
+            announcementsHide();
         }
     }
 }
 
 /*
 ================================================================
-BAŞLAT ABSTRACT BOOK BANNER (retry destekli sağlam init deseni)
+BAŞLAT DUYURU ŞERİDİ (retry destekli sağlam init deseni)
 ================================================================
 */
 
-let abstractBannerInitDone = false;
+let announcementsInitDone = false;
 
-function initAbstractBanner() {
+function initAnnouncements() {
 
-    abstractBannerContainer = document.getElementById("icsat-abstract-banner");
+    announcementsContainer = document.getElementById("icsat-abstract-banner");
 
-    if (!abstractBannerContainer) {
+    if (!announcementsContainer) {
         return false;
     }
 
-    console.log("✅ Abstract Book banner container bulundu.");
+    console.log("✅ Duyuru şeridi container bulundu.");
 
     // İlk anda görünmesin, veri gelince kararı JS versin
-    abstractBannerContainer.style.display = "none";
+    announcementsContainer.style.display = "none";
 
-    if (!abstractBannerInitDone) {
-        abstractBannerInitDone = true;
-        loadAbstractBanner();
+    if (!announcementsInitDone) {
+        announcementsInitDone = true;
+        loadAnnouncements();
     }
 
     return true;
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    initAbstractBanner();
+    initAnnouncements();
 });
 
 if (window.jQuery) {
     jQuery(window).on("elementor/frontend/init", function () {
-        console.log("✅ Elementor frontend hazır (abstract banner).");
-        setTimeout(initAbstractBanner, 300);
-        setTimeout(initAbstractBanner, 1000);
-        setTimeout(initAbstractBanner, 2000);
+        console.log("✅ Elementor frontend hazır (duyuru şeridi).");
+        setTimeout(initAnnouncements, 300);
+        setTimeout(initAnnouncements, 1000);
+        setTimeout(initAnnouncements, 2000);
     });
 }
 
-let abstractBannerTryCount = 0;
+let announcementsTryCount = 0;
 
-const abstractBannerTryInterval = setInterval(function () {
+const announcementsTryInterval = setInterval(function () {
 
-    abstractBannerTryCount++;
+    announcementsTryCount++;
 
-    if (initAbstractBanner()) {
-        clearInterval(abstractBannerTryInterval);
+    if (initAnnouncements()) {
+        clearInterval(announcementsTryInterval);
     }
 
-    if (abstractBannerTryCount >= 20) {
-        clearInterval(abstractBannerTryInterval);
-        console.log("⚠️ Abstract Book banner container 20 denemede bulunamadı.");
+    if (announcementsTryCount >= 20) {
+        clearInterval(announcementsTryInterval);
+        console.log("⚠️ Duyuru şeridi container 20 denemede bulunamadı.");
     }
 
 }, 500);
 
-// 20 saniyede bir yeniden kontrol et — Abstract Book yayınlandığı an
-// sayfa yenilenmeden banner otomatik belirsin diye (Program modülüyle
-// aynı canlı-güncelleme mantığı)
+// 20 saniyede bir yeniden kontrol et — yeni bir duyuru Active=TRUE
+// yapıldığı an sayfa yenilenmeden şerit otomatik belirsin diye
+// (Program modülüyle aynı canlı-güncelleme mantığı)
 setInterval(function () {
-    if (abstractBannerContainer) {
-        loadAbstractBanner();
+    if (announcementsContainer) {
+        loadAnnouncements();
     }
 }, 20000);
