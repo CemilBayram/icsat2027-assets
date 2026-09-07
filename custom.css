@@ -2272,15 +2272,16 @@
     border-left: 4px solid #2ecc71;
 }
 
-/* Takip (⭐) + Takvime ekle (📅) ikonları için sol boşluk — her oturum kartında ortak */
+/* Takip (⭐) + Takvime ekle (📅) ikonları alt alta duruyor — kart genişliğinden
+   tek bir ikon sütunu kadar yer çalıyor. */
 #icsat-pro .ip-session {
-    padding-left: 70px;
+    padding-left: 42px;
 }
 
 #icsat-pro .ip-follow,
 #icsat-pro .ip-cal {
     position: absolute;
-    top: 10px;
+    left: 10px;
     width: 24px;
     height: 24px;
     border-radius: 50%;
@@ -2292,8 +2293,8 @@
     cursor: pointer;
     transition: transform .15s ease, background .15s ease;
 }
-#icsat-pro .ip-follow { left: 10px; }
-#icsat-pro .ip-cal { left: 38px; font-size: 12px; }
+#icsat-pro .ip-follow { top: 10px; }
+#icsat-pro .ip-cal { top: 38px; font-size: 12px; }
 
 #icsat-pro .ip-follow:hover,
 #icsat-pro .ip-cal:hover {
