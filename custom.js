@@ -3718,40 +3718,48 @@ Bu modül eski tekil "Abstract Book Banner" modülünün yerini alır.
 Aynı container'ı (#icsat-abstract-banner) ve aynı Google Sheet
 sekmesini ("Announcements") kullanmaya devam eder — Elementor'da
 HİÇBİR DEĞİŞİKLİK GEREKMEZ. Fark: artık sadece Key="AbstractBook"
-satırını değil, sheet'teki TÜM satırları okur ve Active sütunu
-TRUE olan her satırı sırayla (birden fazlaysa carousel ile) gösterir.
+satırını değil, sheet'teki TÜM satırları okur ve gösterim koşulunu
+sağlayan her satırı sırayla (birden fazlaysa carousel ile) gösterir.
 
-Google Sheet "Announcements" sekmesi beklenen sütunlar:
+Google Sheet "Announcements" sekmesi sütunları (BİRİNCİ SATIR BAŞLIK):
   Key         -> serbest metin, sadece tanımlayıcı/loglama amaçlı.
-                 Görünürlük mantığı ARTIK buna bağlı DEĞİL.
+                 Görünürlük mantığı buna bağlı DEĞİL.
                  (Örn. "AbstractBook", "DeadlineExtended",
                  "EarlyBirdLastDay" gibi istediğin adı verebilirsin.)
-  Active      -> TRUE / FALSE (Evet/Hayır, Yes/No, 1/0 de kabul
-                 edilir). SADECE Active = TRUE olan satırlar
-                 gösterilir. Hiçbir satırda Active=TRUE yoksa
-                 şerit TAMAMEN GİZLENİR.
-  Title       -> büyük başlık, örn. "Abstract Book Published"
-  Subtitle    -> (opsiyonel) alt açıklama metni
-  URL         -> (opsiyonel) dolu ise buton görünür ve tıklanabilir
+  Message     -> duyuru metni, örn. "Abstract Book Published"
+  Link        -> (opsiyonel) dolu ise buton görünür ve tıklanabilir
                  olur. Boşsa buton hiç render edilmez (salt bilgi
                  duyurusu olarak kullanılabilir).
-  ButtonText  -> (opsiyonel) buton metni. URL doluysa ve bu
-                 sütun boşsa "Learn More" kullanılır.
-  Icon        -> (opsiyonel) emoji/simge, boşsa 📣 kullanılır.
+  StartDate   -> (opsiyonel) bu tarihten ÖNCE satır gösterilmez.
+                 Format: YYYY-MM-DD (örn. 2027-03-01). Hücre
+                 formatı Plain Text olmalı (memory kuralı — Apps
+                 Script otomatik Date objesine çevirmesin diye).
+  EndDate     -> (opsiyonel) bu tarihten SONRA satır otomatik
+                 gizlenir (deploy/kod değişikliği gerekmeden).
+                 Aynı format kuralı geçerli.
+  Active      -> TRUE / FALSE (Evet/Hayır, Yes/No, 1/0 de kabul
+                 edilir). SADECE Active = TRUE olan VE tarih
+                 aralığına giren satırlar gösterilir. Hiçbir satır
+                 bu iki koşulu birden sağlamıyorsa şerit TAMAMEN
+                 GİZLENİR.
   Order       -> (opsiyonel) sayı; küçükten büyüğe sıralanır.
                  Boş bırakılırsa sheet'teki satır sırası kullanılır.
 
+  (İleride istersen isteğe bağlı olarak Subtitle, ButtonText, Icon
+  sütunlarını da ekleyebilirsin — kod bunları zaten destekliyor,
+  sadece sheet'te yoklarsa varsayılan değerler kullanılıyor.)
+
 Davranış:
-  - 0 aktif satır  -> şerit tamamen gizli (display:none)
-  - 1 aktif satır  -> sabit (carousel'siz) tek banner
-  - 2+ aktif satır -> üstte otomatik dönen carousel (6 sn'de bir
+  - 0 uygun satır  -> şerit tamamen gizli (display:none)
+  - 1 uygun satır  -> sabit (carousel'siz) tek banner
+  - 2+ uygun satır -> üstte otomatik dönen carousel (6 sn'de bir
                       fade ile bir sonraki duyuruya geçer) + altta
                       küçük nokta (dot) göstergeleri, tıklanabilir
 
 Yeni bir duyuru eklemek için TEK yapılması gereken: Sheet'e yeni
-bir satır eklemek ve Active sütununa TRUE yazmak. Kod veya deploy
-değişikliği GEREKMEZ. Bir duyuruyu kaldırmak için Active'i FALSE
-yapman veya satırı silmen yeterli.
+bir satır eklemek ve Active sütununa TRUE yazmak (istersen
+StartDate/EndDate ile otomatik yayın penceresi de tanımlayabilirsin).
+Kod veya deploy değişikliği GEREKMEZ.
 ================================================================
 */
 
@@ -3768,6 +3776,45 @@ let announcementsCurrentRows = [];
 function announcementsIsTruthy(value) {
     const v = String(value || "").trim().toLowerCase();
     return ["true", "1", "evet", "yes", "aktif", "active"].includes(v);
+}
+
+function announcementsParseDate(value) {
+    const s = String(value || "").trim();
+    if (!s) return null;
+
+    // Google Sheets'in Türkçe/Avrupa formatında ürettiği
+    // "D.MM.YYYY" veya "D.MM.YYYY HH:mm" biçimini elle ayrıştır.
+    // (new Date() bu formatı ABD usulü AY.GÜN.YIL sanıp yanlış
+    // yorumluyor, örn. "1.09.2026" -> 9 Ocak 2026 gibi hatalı
+    // bir tarihe dönüşüyordu.)
+    const dotMatch = s.match(
+        /^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/
+    );
+
+    if (dotMatch) {
+        const [, day, month, year, hour, minute] = dotMatch;
+        const d = new Date(
+            parseInt(year, 10),
+            parseInt(month, 10) - 1,
+            parseInt(day, 10),
+            hour ? parseInt(hour, 10) : 0,
+            minute ? parseInt(minute, 10) : 0
+        );
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    // Aksi halde ISO (YYYY-MM-DD) gibi standart formatları dene
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+}
+
+function announcementsIsWithinDateRange(row) {
+    const now = new Date();
+    const start = announcementsParseDate(row.StartDate);
+    const end = announcementsParseDate(row.EndDate);
+    if (start && now < start) return false;
+    if (end && now > end) return false;
+    return true;
 }
 
 function announcementsStopRotation() {
@@ -3787,10 +3834,10 @@ function announcementsHide() {
 }
 
 function announcementsBuildSlideHTML(row) {
-    const title = row.Title || "";
+    const title = row.Message || row.Title || "";
     const subtitle = row.Subtitle || "";
     const icon = row.Icon || "📣";
-    const url = String(row.URL || "").trim();
+    const url = String(row.Link || row.URL || "").trim();
     const buttonText = row.ButtonText || "Learn More";
 
     const buttonHTML = url
@@ -3890,7 +3937,7 @@ async function loadAnnouncements() {
         announcementsLoadedOnce = true;
 
         const activeRows = data
-            .filter(r => announcementsIsTruthy(r.Active))
+            .filter(r => announcementsIsTruthy(r.Active) && announcementsIsWithinDateRange(r))
             .sort((a, b) => {
                 const orderA = parseFloat(a.Order);
                 const orderB = parseFloat(b.Order);
