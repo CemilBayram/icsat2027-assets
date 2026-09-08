@@ -2,7 +2,7 @@ console.log(
     "%c🔥 ICSAT CUSTOM.JS YENİ SÜRÜM ÇALIŞIYOR 🔥",
     "color:red;font-size:20px;font-weight:bold;"
 );
-console.log("ICSAT ASSETS — v1.2.5");
+console.log("ICSAT ASSETS — v1.2.6");
 
 /*
 ================================================================
@@ -3712,219 +3712,78 @@ const sponsorsTryInterval = setInterval(function () {
 
 /*
 ================================================================
-ICSAT 2027 — GENEL DUYURU ŞERİDİ / ANNOUNCEMENTS BANNER MODÜLÜ (v1.2.4)
+ICSAT 2027 — ABSTRACT BOOK BANNER MODÜLÜ (v1.2.6 — v1.1.8 tasarımına geri alındı)
 
-Bu modül eski tekil "Abstract Book Banner" modülünün yerini alır.
-Aynı container'ı (#icsat-abstract-banner) ve aynı Google Sheet
-sekmesini ("Announcements") kullanmaya devam eder — Elementor'da
-HİÇBİR DEĞİŞİKLİK GEREKMEZ. Fark: artık sadece Key="AbstractBook"
-satırını değil, sheet'teki TÜM satırları okur ve gösterim koşulunu
-sağlayan her satırı sırayla (birden fazlaysa carousel ile) gösterir.
+NOT (v1.2.6): Bu modül v1.2.4/v1.2.5'te "genel duyuru şeridi"ne
+(çoklu satır, carousel, Message/Link/StartDate/EndDate sütunları)
+genişletilmişti. Kullanıcı geri bildirimiyle, orijinal v1.1.8
+tasarımına (tek satır, tek banner, Key/Title/Subtitle/URL/
+ButtonText sütunları) AYNEN geri döndürüldü. Sitenin geri kalanı
+(Sponsors, Add-to-Calendar, vb.) v1.2.5'teki haliyle korunmuştur.
 
-Google Sheet "Announcements" sekmesi sütunları (BİRİNCİ SATIR BAŞLIK):
-  Key         -> serbest metin, sadece tanımlayıcı/loglama amaçlı.
-                 Görünürlük mantığı buna bağlı DEĞİL.
-                 (Örn. "AbstractBook", "DeadlineExtended",
-                 "EarlyBirdLastDay" gibi istediğin adı verebilirsin.)
-  Message     -> duyuru metni, örn. "Abstract Book Published"
-  Link        -> (opsiyonel) dolu ise buton görünür ve tıklanabilir
-                 olur. Boşsa buton hiç render edilmez (salt bilgi
-                 duyurusu olarak kullanılabilir).
-  StartDate   -> (opsiyonel) bu tarihten ÖNCE satır gösterilmez.
-                 Format: YYYY-MM-DD (örn. 2027-03-01). Hücre
-                 formatı Plain Text olmalı (memory kuralı — Apps
-                 Script otomatik Date objesine çevirmesin diye).
-  EndDate     -> (opsiyonel) bu tarihten SONRA satır otomatik
-                 gizlenir (deploy/kod değişikliği gerekmeden).
-                 Aynı format kuralı geçerli.
-  Active      -> TRUE / FALSE (Evet/Hayır, Yes/No, 1/0 de kabul
-                 edilir). SADECE Active = TRUE olan VE tarih
-                 aralığına giren satırlar gösterilir. Hiçbir satır
-                 bu iki koşulu birden sağlamıyorsa şerit TAMAMEN
-                 GİZLENİR.
-  Order       -> (opsiyonel) sayı; küçükten büyüğe sıralanır.
-                 Boş bırakılırsa sheet'teki satır sırası kullanılır.
+Google Sheet "Announcements" sekmesi beklenen sütunlar:
+  Key         -> banner tipini ayırt eden anahtar. Bu modül
+                 sadece Key = "AbstractBook" olan satırı okur
+                 (ileride aynı sheet'e başka Key değerleriyle
+                 başka duyuru banner'ları eklenebilir).
+  Title       -> büyük başlık, örn. "Abstract Book Published"
+  Subtitle    -> (opsiyonel) alt açıklama metni
+  URL         -> Abstract Book dosyasının (Drive/PDF) linki.
+                 BU SÜTUN BOŞSA BANNER TAMAMEN GİZLİ KALIR.
+  ButtonText  -> (opsiyonel) buton metni, boşsa
+                 "Download Abstract Book" kullanılır.
 
-  (İleride istersen isteğe bağlı olarak Subtitle, ButtonText, Icon
-  sütunlarını da ekleyebilirsin — kod bunları zaten destekliyor,
-  sadece sheet'te yoklarsa varsayılan değerler kullanılıyor.)
-
-Davranış:
-  - 0 uygun satır  -> şerit tamamen gizli (display:none)
-  - 1 uygun satır  -> sabit (carousel'siz) tek banner
-  - 2+ uygun satır -> üstte otomatik dönen carousel (6 sn'de bir
-                      fade ile bir sonraki duyuruya geçer) + altta
-                      küçük nokta (dot) göstergeleri, tıklanabilir
-
-Yeni bir duyuru eklemek için TEK yapılması gereken: Sheet'e yeni
-bir satır eklemek ve Active sütununa TRUE yazmak (istersen
-StartDate/EndDate ile otomatik yayın penceresi de tanımlayabilirsin).
-Kod veya deploy değişikliği GEREKMEZ.
+Sadece URL sütunu doldurulduğunda banner otomatik olarak
+görünür olur — kod veya deploy değişikliği gerekmez.
 ================================================================
 */
 
-let announcementsContainer = document.getElementById("icsat-abstract-banner");
+let abstractBannerContainer = document.getElementById("icsat-abstract-banner");
 
 const ANNOUNCEMENTS_API_URL =
     `${ICSAT_SHEETS_API_URL}?sheet=Announcements`;
 
-let announcementsLoadedOnce = false;
-let announcementsRotateInterval = null;
-let announcementsActiveIndex = 0;
-let announcementsCurrentRows = [];
+let abstractBannerLoadedOnce = false;
 
-function announcementsIsTruthy(value) {
-    const v = String(value || "").trim().toLowerCase();
-    return ["true", "1", "evet", "yes", "aktif", "active"].includes(v);
+function abstractBannerHide() {
+    if (!abstractBannerContainer) return;
+    abstractBannerContainer.innerHTML = "";
+    abstractBannerContainer.classList.remove("is-visible");
+    abstractBannerContainer.style.display = "none";
 }
 
-function announcementsParseDate(value) {
-    const s = String(value || "").trim();
-    if (!s) return null;
+function abstractBannerShow(row) {
+    if (!abstractBannerContainer) return;
 
-    // Google Sheets'in Türkçe/Avrupa formatında ürettiği
-    // "D.MM.YYYY" veya "D.MM.YYYY HH:mm" biçimini elle ayrıştır.
-    // (new Date() bu formatı ABD usulü AY.GÜN.YIL sanıp yanlış
-    // yorumluyor, örn. "1.09.2026" -> 9 Ocak 2026 gibi hatalı
-    // bir tarihe dönüşüyordu.)
-    const dotMatch = s.match(
-        /^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s+(\d{1,2}):(\d{2}))?$/
-    );
-
-    if (dotMatch) {
-        const [, day, month, year, hour, minute] = dotMatch;
-        const d = new Date(
-            parseInt(year, 10),
-            parseInt(month, 10) - 1,
-            parseInt(day, 10),
-            hour ? parseInt(hour, 10) : 0,
-            minute ? parseInt(minute, 10) : 0
-        );
-        return isNaN(d.getTime()) ? null : d;
-    }
-
-    // Aksi halde ISO (YYYY-MM-DD) gibi standart formatları dene
-    const d = new Date(s);
-    return isNaN(d.getTime()) ? null : d;
-}
-
-function announcementsIsWithinDateRange(row) {
-    const now = new Date();
-    const start = announcementsParseDate(row.StartDate);
-    const end = announcementsParseDate(row.EndDate);
-    if (start && now < start) return false;
-    if (end && now > end) return false;
-    return true;
-}
-
-function announcementsStopRotation() {
-    if (announcementsRotateInterval) {
-        clearInterval(announcementsRotateInterval);
-        announcementsRotateInterval = null;
-    }
-}
-
-function announcementsHide() {
-    if (!announcementsContainer) return;
-    announcementsStopRotation();
-    announcementsContainer.innerHTML = "";
-    announcementsContainer.classList.remove("is-visible");
-    announcementsContainer.style.display = "none";
-    announcementsCurrentRows = [];
-}
-
-function announcementsBuildSlideHTML(row) {
-    const title = row.Message || row.Title || "";
+    const title = row.Title || "Abstract Book Published";
     const subtitle = row.Subtitle || "";
-    const icon = row.Icon || "📣";
-    const url = String(row.Link || row.URL || "").trim();
-    const buttonText = row.ButtonText || "Learn More";
+    const buttonText = row.ButtonText || "Download Abstract Book";
 
-    const buttonHTML = url
-        ? `<a class="abs-banner-btn"
-               href="${url}"
+    abstractBannerContainer.innerHTML = `
+        <div class="abs-banner-inner">
+            <div class="abs-banner-badge">📖</div>
+            <div class="abs-banner-text">
+                <div class="abs-banner-title">${title}</div>
+                ${subtitle ? `<div class="abs-banner-subtitle">${subtitle}</div>` : ""}
+            </div>
+            <a class="abs-banner-btn"
+               href="${row.URL}"
                target="_blank"
                rel="noopener noreferrer">
                 ${buttonText} <span aria-hidden="true">↓</span>
-            </a>`
-        : "";
-
-    return `
-        <div class="abs-banner-badge">${icon}</div>
-        <div class="abs-banner-text">
-            <div class="abs-banner-title">${title}</div>
-            ${subtitle ? `<div class="abs-banner-subtitle">${subtitle}</div>` : ""}
+            </a>
         </div>
-        ${buttonHTML}
-    `;
-}
-
-function announcementsRenderDots() {
-    if (announcementsCurrentRows.length < 2) return "";
-
-    const dots = announcementsCurrentRows
-        .map((_, i) => `<button type="button" class="abs-banner-dot${i === announcementsActiveIndex ? " is-active" : ""}" data-idx="${i}" aria-label="Announcement ${i + 1}"></button>`)
-        .join("");
-
-    return `<div class="abs-banner-dots">${dots}</div>`;
-}
-
-function announcementsRenderCurrent() {
-    if (!announcementsContainer || announcementsCurrentRows.length === 0) return;
-
-    const row = announcementsCurrentRows[announcementsActiveIndex];
-
-    announcementsContainer.innerHTML = `
-        <div class="abs-banner-inner">
-            ${announcementsBuildSlideHTML(row)}
-        </div>
-        ${announcementsRenderDots()}
     `;
 
-    announcementsContainer.querySelectorAll(".abs-banner-dot").forEach(dot => {
-        dot.addEventListener("click", function () {
-            announcementsActiveIndex = parseInt(this.getAttribute("data-idx"), 10) || 0;
-            announcementsRenderCurrent();
-            announcementsRestartRotation();
-        });
-    });
-
-    announcementsContainer.style.display = "block";
+    abstractBannerContainer.style.display = "block";
     // reflow tetikleyip animasyonun her seferinde çalışmasını sağla
-    void announcementsContainer.offsetWidth;
-    announcementsContainer.classList.add("is-visible");
+    void abstractBannerContainer.offsetWidth;
+    abstractBannerContainer.classList.add("is-visible");
 }
 
-function announcementsRestartRotation() {
-    announcementsStopRotation();
+async function loadAbstractBanner() {
 
-    if (announcementsCurrentRows.length < 2) return;
-
-    announcementsRotateInterval = setInterval(function () {
-        announcementsActiveIndex =
-            (announcementsActiveIndex + 1) % announcementsCurrentRows.length;
-        announcementsRenderCurrent();
-    }, 6000);
-}
-
-function announcementsShow(rows) {
-    if (!announcementsContainer) return;
-
-    announcementsCurrentRows = rows;
-
-    // Sheet'te güncelleme geldiyse (satır eklendi/çıkarıldı) index'in
-    // sınırlar dışına taşmasını engelle
-    if (announcementsActiveIndex >= rows.length) {
-        announcementsActiveIndex = 0;
-    }
-
-    announcementsRenderCurrent();
-    announcementsRestartRotation();
-}
-
-async function loadAnnouncements() {
-
-    if (!announcementsContainer) return;
+    if (!abstractBannerContainer) return;
 
     try {
 
@@ -3934,103 +3793,94 @@ async function loadAnnouncements() {
             throw new Error("Announcements API bir liste döndürmedi.");
         }
 
-        announcementsLoadedOnce = true;
+        abstractBannerLoadedOnce = true;
 
-        const activeRows = data
-            .filter(r => announcementsIsTruthy(r.Active) && announcementsIsWithinDateRange(r))
-            .sort((a, b) => {
-                const orderA = parseFloat(a.Order);
-                const orderB = parseFloat(b.Order);
-                const hasOrderA = !isNaN(orderA);
-                const hasOrderB = !isNaN(orderB);
-                if (hasOrderA && hasOrderB) return orderA - orderB;
-                if (hasOrderA) return -1;
-                if (hasOrderB) return 1;
-                return 0;
-            });
+        const row = data.find(r =>
+            String(r.Key || "").trim().toLowerCase() === "abstractbook"
+        );
 
-        if (activeRows.length > 0) {
-            announcementsShow(activeRows);
+        if (row && String(row.URL || "").trim() !== "") {
+            abstractBannerShow(row);
         } else {
-            announcementsHide();
+            abstractBannerHide();
         }
 
     } catch (err) {
 
-        console.error("Duyuru şeridi yüklenemedi:", err);
+        console.error("Abstract Book banner yüklenemedi:", err);
 
-        // Hata durumunda şeridi sessizce gizli tut (kullanıcıya
+        // Hata durumunda banner'ı sessizce gizli tut (kullanıcıya
         // bozuk/boş bir kutu göstermemek için)
-        if (!announcementsLoadedOnce) {
-            announcementsHide();
+        if (!abstractBannerLoadedOnce) {
+            abstractBannerHide();
         }
     }
 }
 
 /*
 ================================================================
-BAŞLAT DUYURU ŞERİDİ (retry destekli sağlam init deseni)
+BAŞLAT ABSTRACT BOOK BANNER (retry destekli sağlam init deseni)
 ================================================================
 */
 
-let announcementsInitDone = false;
+let abstractBannerInitDone = false;
 
-function initAnnouncements() {
+function initAbstractBanner() {
 
-    announcementsContainer = document.getElementById("icsat-abstract-banner");
+    abstractBannerContainer = document.getElementById("icsat-abstract-banner");
 
-    if (!announcementsContainer) {
+    if (!abstractBannerContainer) {
         return false;
     }
 
-    console.log("✅ Duyuru şeridi container bulundu.");
+    console.log("✅ Abstract Book banner container bulundu.");
 
     // İlk anda görünmesin, veri gelince kararı JS versin
-    announcementsContainer.style.display = "none";
+    abstractBannerContainer.style.display = "none";
 
-    if (!announcementsInitDone) {
-        announcementsInitDone = true;
-        loadAnnouncements();
+    if (!abstractBannerInitDone) {
+        abstractBannerInitDone = true;
+        loadAbstractBanner();
     }
 
     return true;
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    initAnnouncements();
+    initAbstractBanner();
 });
 
 if (window.jQuery) {
     jQuery(window).on("elementor/frontend/init", function () {
-        console.log("✅ Elementor frontend hazır (duyuru şeridi).");
-        setTimeout(initAnnouncements, 300);
-        setTimeout(initAnnouncements, 1000);
-        setTimeout(initAnnouncements, 2000);
+        console.log("✅ Elementor frontend hazır (abstract banner).");
+        setTimeout(initAbstractBanner, 300);
+        setTimeout(initAbstractBanner, 1000);
+        setTimeout(initAbstractBanner, 2000);
     });
 }
 
-let announcementsTryCount = 0;
+let abstractBannerTryCount = 0;
 
-const announcementsTryInterval = setInterval(function () {
+const abstractBannerTryInterval = setInterval(function () {
 
-    announcementsTryCount++;
+    abstractBannerTryCount++;
 
-    if (initAnnouncements()) {
-        clearInterval(announcementsTryInterval);
+    if (initAbstractBanner()) {
+        clearInterval(abstractBannerTryInterval);
     }
 
-    if (announcementsTryCount >= 20) {
-        clearInterval(announcementsTryInterval);
-        console.log("⚠️ Duyuru şeridi container 20 denemede bulunamadı.");
+    if (abstractBannerTryCount >= 20) {
+        clearInterval(abstractBannerTryInterval);
+        console.log("⚠️ Abstract Book banner container 20 denemede bulunamadı.");
     }
 
 }, 500);
 
-// 20 saniyede bir yeniden kontrol et — yeni bir duyuru Active=TRUE
-// yapıldığı an sayfa yenilenmeden şerit otomatik belirsin diye
-// (Program modülüyle aynı canlı-güncelleme mantığı)
+// 20 saniyede bir yeniden kontrol et — Abstract Book yayınlandığı an
+// sayfa yenilenmeden banner otomatik belirsin diye (Program modülüyle
+// aynı canlı-güncelleme mantığı)
 setInterval(function () {
-    if (announcementsContainer) {
-        loadAnnouncements();
+    if (abstractBannerContainer) {
+        loadAbstractBanner();
     }
 }, 20000);
