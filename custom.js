@@ -2,7 +2,7 @@ console.log(
     "%c🔥 ICSAT CUSTOM.JS YENİ SÜRÜM ÇALIŞIYOR 🔥",
     "color:red;font-size:20px;font-weight:bold;"
 );
-console.log("ICSAT ASSETS — v1.2.6");
+console.log("ICSAT ASSETS — v1.2.7");
 
 /*
 ================================================================
@@ -74,6 +74,130 @@ async function icsatFetchJSON(url, retries = 3, backoffMs = 800) {
     throw lastError;
 
 }
+
+
+/*
+================================================================
+SKELETON LOADER YARDIMCILARI (paylaşılan)
+"Loading..." yazısı yerine gri placeholder kutuları göstermek
+için üç hazır layout: kart grid (Speakers/Sponsors/Photos),
+liste satırı (Committee/Documents) ve blok (Program/Timeline/
+Social/Registration). Her modül kendi container'ının içine
+bunlardan birini basıyor, veri gelince innerHTML tamamen
+değiştiriliyor.
+================================================================
+*/
+
+function icsatSkeletonCards(count = 6) {
+    let html = '<div class="icsat-skel-grid">';
+    for (let i = 0; i < count; i++) {
+        html += `
+            <div class="icsat-skel-card">
+                <div class="icsat-skel icsat-skel-photo"></div>
+                <div class="icsat-skel icsat-skel-line"></div>
+                <div class="icsat-skel icsat-skel-line short"></div>
+            </div>
+        `;
+    }
+    html += "</div>";
+    return html;
+}
+
+function icsatSkeletonRows(count = 5) {
+    let html = '<div class="icsat-skel-list">';
+    for (let i = 0; i < count; i++) {
+        html += `
+            <div class="icsat-skel-row">
+                <div class="icsat-skel icsat-skel-avatar"></div>
+                <div class="icsat-skel icsat-skel-line"></div>
+            </div>
+        `;
+    }
+    html += "</div>";
+    return html;
+}
+
+function icsatSkeletonBlocks(count = 4) {
+    let html = '<div class="icsat-skel-blocks">';
+    for (let i = 0; i < count; i++) {
+        html += `<div class="icsat-skel icsat-skel-block"></div>`;
+    }
+    html += "</div>";
+    return html;
+}
+
+
+/*
+================================================================
+SCROLL-TO-TOP BUTONU (global, tüm sayfalarda)
+Elementor sayfa yapısına bağlı olmadığı için ağır retry
+interval'lerine gerek yok; DOMContentLoaded + elementor/frontend
+/init ile iki kez tetiklenip idempotent şekilde tek buton
+oluşturuluyor.
+================================================================
+*/
+
+(function () {
+
+    let icsatScrollTopDone = false;
+
+    function initIcsatScrollToTop() {
+
+        if (icsatScrollTopDone) return;
+
+        if (document.getElementById("icsat-scroll-top-btn")) {
+            icsatScrollTopDone = true;
+            return;
+        }
+
+        const btn = document.createElement("button");
+        btn.id = "icsat-scroll-top-btn";
+        btn.type = "button";
+        btn.setAttribute("aria-label", "Scroll to top");
+        btn.innerHTML = `
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                 stroke="currentColor" stroke-width="2.4"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 19V5"></path>
+                <path d="M5 12l7-7 7 7"></path>
+            </svg>
+        `;
+
+        document.body.appendChild(btn);
+
+        btn.addEventListener("click", function () {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+
+        let ticking = false;
+
+        window.addEventListener("scroll", function () {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(function () {
+                if (window.scrollY > 400) {
+                    btn.classList.add("is-visible");
+                } else {
+                    btn.classList.remove("is-visible");
+                }
+                ticking = false;
+            });
+        }, { passive: true });
+
+        icsatScrollTopDone = true;
+
+    }
+
+    document.addEventListener("DOMContentLoaded", initIcsatScrollToTop);
+
+    jQuery(window).on("elementor/frontend/init", function () {
+        setTimeout(initIcsatScrollToTop, 300);
+        setTimeout(initIcsatScrollToTop, 1000);
+    });
+
+    setTimeout(initIcsatScrollToTop, 2000);
+
+})();
 
 
 /*
@@ -156,7 +280,7 @@ async function loadSpeakerPage(pageConfig) {
 
     container.innerHTML = `
         <div class="speakers-loading">
-            Loading speakers…
+            ${icsatSkeletonCards(6)}
         </div>
     `;
 
@@ -599,7 +723,7 @@ async function loadCommittee() {
     if (!committeeLoaded) {
         committeeContainer.innerHTML = `
             <div class="committee-loading">
-                Loading committee members…
+                ${icsatSkeletonRows(6)}
             </div>
         `;
     }
@@ -1120,7 +1244,9 @@ async function loadProgram() {
     // yenilemelerinde ekranı gereksiz yere sıfırlamayalım.
     if (!programLoadedOnce) {
         programContainer.innerHTML = `
-            <div class="program-loading">Loading program…</div>
+            <div class="program-loading">
+                ${icsatSkeletonBlocks(5)}
+            </div>
         `;
     }
 
@@ -2091,7 +2217,9 @@ async function loadSocial() {
 
     if (!socialLoadedOnce) {
         socialContainer.innerHTML = `
-            <div class="social-loading">Loading social program…</div>
+            <div class="social-loading">
+                ${icsatSkeletonBlocks(3)}
+            </div>
         `;
     }
 
@@ -2442,7 +2570,9 @@ async function loadTimeline() {
 
     if (!timelineLoadedOnce) {
         timelineContainer.innerHTML = `
-            <div class="timeline-loading">Loading schedule…</div>
+            <div class="timeline-loading">
+                ${icsatSkeletonBlocks(5)}
+            </div>
         `;
     }
 
@@ -2659,7 +2789,9 @@ async function loadRegistration() {
 
     if (!registrationLoadedOnce) {
         registrationContainer.innerHTML = `
-            <div class="reg-loading">Loading registration information…</div>
+            <div class="reg-loading">
+                ${icsatSkeletonBlocks(3)}
+            </div>
         `;
     }
 
@@ -2965,7 +3097,9 @@ async function loadDocuments() {
 
     if (!documentsLoadedOnce) {
         documentsContainer.innerHTML = `
-            <div class="doc-loading">Loading documents…</div>
+            <div class="doc-loading">
+                ${icsatSkeletonRows(5)}
+            </div>
         `;
     }
 
@@ -3218,7 +3352,9 @@ async function loadPhotos() {
 
     if (!photosLoadedOnce) {
         photosContainer.innerHTML = `
-            <div class="photo-loading">Loading photos…</div>
+            <div class="photo-loading">
+                ${icsatSkeletonCards(8)}
+            </div>
         `;
     }
 
@@ -3501,7 +3637,9 @@ async function loadSponsors() {
 
     if (!sponsorsLoadedOnce) {
         sponsorsContainer.innerHTML = `
-            <div class="spo-loading">Loading sponsors…</div>
+            <div class="spo-loading">
+                ${icsatSkeletonCards(6)}
+            </div>
         `;
     }
 
