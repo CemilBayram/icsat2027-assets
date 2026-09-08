@@ -1,6 +1,6 @@
 /* =========================================================
    ICSAT 2027 — SPEAKERS
-   FINAL CLEAN CSS - V1.2.6
+   FINAL CLEAN CSS - V1.2.7
    ========================================================= */
 
 
@@ -4061,5 +4061,163 @@ renkleriyle (aynı isimli class, örn. .upcoming { background:#3498db })
         grid-template-columns: 1fr;
         padding: 16px;
         margin-bottom: 28px;
+    }
+}
+
+/* ============================================================
+   ICSAT SCROLL-TO-TOP BUTTON (global, tüm sayfalarda)
+   v1.2.7
+   ============================================================ */
+#icsat-scroll-top-btn {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: none;
+    background: #30206f;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(48, 32, 111, .35);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(14px);
+    transition: opacity .25s ease, transform .25s ease,
+                visibility .25s ease, background .2s ease,
+                box-shadow .2s ease;
+    z-index: 9999;
+    padding: 0;
+}
+
+#icsat-scroll-top-btn.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+#icsat-scroll-top-btn:hover {
+    background: #5f7cff;
+    box-shadow: 0 8px 22px rgba(95, 124, 255, .4);
+}
+
+#icsat-scroll-top-btn:active {
+    transform: scale(.94);
+}
+
+#icsat-scroll-top-btn svg {
+    pointer-events: none;
+}
+
+@media (max-width: 600px) {
+    #icsat-scroll-top-btn {
+        right: 14px;
+        bottom: 14px;
+        width: 42px;
+        height: 42px;
+    }
+}
+
+/* ============================================================
+   ICSAT SKELETON LOADERS (shared — tüm modüllerde tekrar kullanılır)
+   v1.2.7
+   ============================================================ */
+@keyframes icsatSkelPulse {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.icsat-skel {
+    background-image: linear-gradient(
+        90deg,
+        #e9e9f1 25%,
+        #f5f5fa 37%,
+        #e9e9f1 63%
+    );
+    background-size: 400% 100%;
+    animation: icsatSkelPulse 1.4s ease-in-out infinite;
+    border-radius: 8px;
+}
+
+/* Kart grid iskeleti (Speakers, Sponsors, Photos) */
+.icsat-skel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 22px;
+    width: 100%;
+}
+
+.icsat-skel-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.icsat-skel-card .icsat-skel-photo {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 12px;
+}
+
+.icsat-skel-card .icsat-skel-line {
+    height: 13px;
+    border-radius: 4px;
+}
+
+.icsat-skel-card .icsat-skel-line.short {
+    width: 55%;
+}
+
+/* Liste satırı iskeleti (Committee, Documents) */
+.icsat-skel-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+}
+
+.icsat-skel-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.icsat-skel-row .icsat-skel-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+}
+
+.icsat-skel-row .icsat-skel-line {
+    height: 13px;
+    border-radius: 4px;
+    flex: 1;
+}
+
+/* Blok iskeleti (Program, Timeline, Social, Registration) */
+.icsat-skel-blocks {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+}
+
+.icsat-skel-block {
+    height: 70px;
+    border-radius: 10px;
+}
+
+@media (max-width: 600px) {
+    .icsat-skel-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 14px;
+    }
+
+    .icsat-skel-block {
+        height: 60px;
     }
 }
